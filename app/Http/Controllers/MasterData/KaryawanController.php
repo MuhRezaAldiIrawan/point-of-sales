@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
-use Illuminate\Support\Facades\Storage;
-
-use App\Models\User;
 use App\Models\Jabatan;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\DataTables;
 
 class KaryawanController extends Controller
 {
@@ -28,32 +27,34 @@ class KaryawanController extends Controller
                 ->addIndexColumn()
                 ->addColumn('foto', function ($row) {
                     if ($row->foto) {
-                        return '<img src="' . Storage::url($row->foto) . '" alt="Foto" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">';
+                        return '<img src="'.Storage::url($row->foto).'" alt="Foto" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">';
                     }
+
                     return '<div style="width: 50px; height: 50px; background: #f1f1f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="ft-user" style="color: #ccc;"></i></div>';
                 })
                 ->addColumn('jabatan', function ($row) {
                     return $row->jabatan->nama;
                 })
                 ->addColumn('nama_lengkap', function ($row) {
-                    return $row->nama_depan . ' ' . $row->nama_belakang;
+                    return $row->nama_depan.' '.$row->nama_belakang;
                 })
                 ->addColumn('action', function ($row) {
                     $btn =
                         '
 
-                            <button class="btn btn-icon btn-info btn-karyawan-reset-password" data-id="' . $row->id . '" type="button" role="button" data-toggle="tooltip" data-placement="top" title="Reset Password">
+                            <button class="btn btn-icon btn-info btn-karyawan-reset-password" data-id="'.$row->id.'" type="button" role="button" data-toggle="tooltip" data-placement="top" title="Reset Password">
                                 <i class="ft-refresh-cw"></i>
                             </button>
 
-                            <a href="' . route('karyawan.edit', $row->id) . '" class="btn btn-icon btn-warning" type="button" role="button">
+                            <a href="'.route('karyawan.edit', $row->id).'" class="btn btn-icon btn-warning" type="button" role="button">
                                 <i class="ft-edit"></i>
                             </a>
 
-                            <button class="btn btn-icon btn-danger btn-karyawan-delete" data-id="' . $row->id . '" type="button" role="button">
+                            <button class="btn btn-icon btn-danger btn-karyawan-delete" data-id="'.$row->id.'" type="button" role="button">
                                 <i class="ft-trash"></i>
                             </button>
                             ';
+
                     return $btn;
                 })
                 ->rawColumns(['action', 'foto'])
@@ -98,19 +99,24 @@ class KaryawanController extends Controller
                 'nama_depan' => $request->nama_depan,
                 'nama_belakang' => $request->nama_belakang,
                 'jabatan_id' => $request->jabatan_id,
+                'status_login' => $request->status_login ?? 'aktif',
+                'status_karyawan' => $request->status_karyawan ?? 'aktif',
                 'password' => bcrypt($request->nip),
                 'created_by' => auth()->user()->id,
-                'updated_by' => auth()->user()->id
+                'updated_by' => auth()->user()->id,
             ]);
 
             alert()->success('Berhasil', 'Karyawan berhasil ditambahkan');
+
             return redirect()->route('karyawan.index');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            alert()->error('Gagal', 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all()));
+            alert()->error('Gagal', 'Validasi gagal: '.implode(', ', $e->validator->errors()->all()));
+
             return redirect()->back()->withInput()->withErrors($e->validator);
         } catch (\Exception $e) {
-            alert()->error('Gagal', 'Gagal menambahkan karyawan: ' . $e->getMessage());
+            alert()->error('Gagal', 'Gagal menambahkan karyawan: '.$e->getMessage());
+
             return redirect()->back()->withInput();
         }
     }
@@ -148,15 +154,15 @@ class KaryawanController extends Controller
             $karyawan = User::findOrFail($id);
 
             $rules = [
-                'nip' => 'required|string|unique:users,nip,' . $id,
-                'ktp' => 'nullable|string|unique:users,ktp,' . $id,
+                'nip' => 'required|string|unique:users,nip,'.$id,
+                'ktp' => 'nullable|string|unique:users,ktp,'.$id,
                 'nama_depan' => 'required|string|max:255',
                 'nama_belakang' => 'nullable|string|max:255',
                 'jenis_kelamin' => 'nullable|in:L,P',
                 'alamat' => 'nullable|string',
                 'tanggal_lahir' => 'nullable|date',
-                'email' => 'nullable|email|unique:users,email,' . $id,
-                'no_telepon' => 'nullable|string|unique:users,no_telepon,' . $id,
+                'email' => 'nullable|email|unique:users,email,'.$id,
+                'no_telepon' => 'nullable|string|unique:users,no_telepon,'.$id,
                 'jabatan_id' => 'nullable|exists:jabatans,id',
                 'tanggungan' => 'nullable|string',
                 'referensi' => 'nullable|string',
@@ -176,7 +182,6 @@ class KaryawanController extends Controller
 
             $validated = $request->validate($rules);
 
-
             if (empty($validated['tanggal_lahir'])) {
                 $validated['tanggal_lahir'] = null;
             }
@@ -184,18 +189,16 @@ class KaryawanController extends Controller
                 $validated['tanggal_masuk'] = null;
             }
 
-
             if ($request->hasFile('foto')) {
                 if ($karyawan->foto && Storage::disk('public')->exists($karyawan->foto)) {
                     Storage::disk('public')->delete($karyawan->foto);
                 }
 
                 $foto = $request->file('foto');
-                $fileName = time() . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $fileName = time().'_'.uniqid().'.'.$foto->getClientOriginalExtension();
                 $fotoPath = $foto->storeAs('karyawan', $fileName, 'public');
                 $validated['foto'] = $fotoPath;
             }
-
 
             if ($request->filled('password')) {
                 $validated['password'] = bcrypt($request->password);
@@ -203,20 +206,21 @@ class KaryawanController extends Controller
                 unset($validated['password']);
             }
 
-
             $validated['updated_by'] = auth()->user()->id ?? null;
-
 
             $karyawan->update($validated);
 
             alert()->success('Berhasil', 'Data karyawan berhasil diupdate');
+
             return redirect()->route('karyawan.index');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            alert()->error('Gagal', 'Validasi gagal: ' . implode(', ', $e->validator->errors()->all()));
+            alert()->error('Gagal', 'Validasi gagal: '.implode(', ', $e->validator->errors()->all()));
+
             return redirect()->back()->withInput()->withErrors($e->validator);
         } catch (\Exception $e) {
-            alert()->error('Gagal', 'Gagal mengupdate data karyawan: ' . $e->getMessage());
+            alert()->error('Gagal', 'Gagal mengupdate data karyawan: '.$e->getMessage());
+
             return redirect()->back()->withInput();
         }
     }
@@ -235,12 +239,12 @@ class KaryawanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password karyawan berhasil direset'
+                'message' => 'Password karyawan berhasil direset',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mereset password: ' . $e->getMessage()
+                'message' => 'Gagal mereset password: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -264,12 +268,12 @@ class KaryawanController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Karyawan berhasil dihapus'
+                'message' => 'Karyawan berhasil dihapus',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus karyawan: ' . $e->getMessage()
+                'message' => 'Gagal menghapus karyawan: '.$e->getMessage(),
             ], 500);
         }
     }
