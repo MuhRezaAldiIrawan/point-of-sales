@@ -1,0 +1,168 @@
+<?php
+
+namespace App\Http\Controllers\MasterData;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
+
+use App\Models\Satuan;
+
+
+
+class SatuanController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $title = 'Satuan';
+
+        if ($request->ajax()) {
+
+            $data = Satuan::orderBy('created_at', 'desc')->get();
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $btn =
+                        '
+                            <button class="btn btn-icon btn-primary btn-satuan-edit" data-id="' . $row->id . '" type="button" role="button">
+                                <i class="ft-edit"></i>
+                            </button>
+
+                            <button class="btn btn-icon btn-danger btn-satuan-delete" data-id="' . $row->id . '" type="button" role="button">
+                                <i class="ft-trash"></i>
+                            </button>
+                            ';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('pages.masterdata.satuan.satuan', compact('title'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'kode' => 'nullable|string'
+            ]);
+
+            $satuan = Satuan::create([
+                'nama' => $request->nama,
+                'kode' => $request->kode,
+                'created_by' => auth()->user()->id,
+                'updated_by' => auth()->user()->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Satuan berhasil ditambahkan',
+                'data' => $satuan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menambahkan satuan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        try {
+            $satuan = Satuan::findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $satuan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data satuan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        try {
+
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'kode' => 'nullable|string'
+            ]);
+
+            $satuan = Satuan::findOrFail($id);
+            $satuan->update([
+                'nama' => $request->nama,
+                'kode' => $request->kode,
+                'updated_by' => auth()->user()->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Satuan berhasil diupdate',
+                'data' => $satuan
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate satuan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        try {
+            $satuan = Satuan::findOrFail($id);
+            $satuan->updated_by = auth()->user()->id;
+            $satuan->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Satuan berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus satuan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+}
