@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Yajra\DataTables\DataTables;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
-
+use App\Models\Barang;
 use App\Models\DaftarHarga;
 use App\Models\DetailDaftarHarga;
-use App\Models\Barang;
 use App\Models\Satuan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\DataTables;
 
 class DaftarHargaController extends Controller
 {
@@ -31,14 +30,15 @@ class DaftarHargaController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn =
                         '
-                            <button class="btn btn-icon btn-primary btn-daftarharga-edit" data-id="' . $row->id . '" type="button" role="button">
+                            <button class="btn btn-icon btn-primary btn-daftarharga-edit" data-id="'.$row->id.'" type="button" role="button">
                                 <i class="ft-edit"></i>
                             </button>
 
-                            <button class="btn btn-icon btn-danger btn-daftarharga-delete" data-id="' . $row->id . '" type="button" role="button">
+                            <button class="btn btn-icon btn-danger btn-daftarharga-delete" data-id="'.$row->id.'" type="button" role="button">
                                 <i class="ft-trash"></i>
                             </button>
                             ';
+
                     return $btn;
                 })
                 ->rawColumns(['action'])
@@ -71,15 +71,18 @@ class DaftarHargaController extends Controller
             'nama' => 'required|string|max:255',
             'diskon' => 'nullable|numeric|min:0|max:100',
             'status' => 'required|in:all barang,pcs',
+            'is_active' => 'required|boolean',
             'detail' => 'required_if:status,pcs|array',
             'detail.*.barang_id' => 'required_if:status,pcs|exists:barangs,id',
             'detail.*.satuan_id' => 'required_if:status,pcs|exists:satuans,id',
             'detail.*.harga_jual' => 'required_if:status,pcs|numeric|min:0',
             'detail.*.diskon' => 'nullable|numeric|min:0|max:100',
+            'detail.*.is_active' => 'required_if:status,pcs|boolean',
         ], [
             'nama.required' => 'Nama daftar harga harus diisi',
             'status.required' => 'Tipe harga harus dipilih',
             'status.in' => 'Tipe harga tidak valid',
+            'is_active.required' => 'Status aktif harus dipilih',
             'detail.required_if' => 'Minimal harus ada 1 barang untuk tipe Per Satuan',
             'detail.*.barang_id.required_if' => 'Barang harus dipilih',
             'detail.*.barang_id.exists' => 'Barang tidak valid',
@@ -87,6 +90,7 @@ class DaftarHargaController extends Controller
             'detail.*.satuan_id.exists' => 'Satuan tidak valid',
             'detail.*.harga_jual.required_if' => 'Harga jual harus diisi',
             'detail.*.harga_jual.numeric' => 'Harga jual harus berupa angka',
+            'detail.*.is_active.required_if' => 'Status aktif detail harus dipilih',
         ]);
 
         DB::beginTransaction();
@@ -96,11 +100,12 @@ class DaftarHargaController extends Controller
                 'nama' => $validated['nama'],
                 'diskon' => $validated['diskon'] ?? 0,
                 'status' => $validated['status'],
+                'is_active' => $validated['is_active'],
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
 
-            if ($validated['status'] === 'pcs' && !empty($validated['detail'])) {
+            if ($validated['status'] === 'pcs' && ! empty($validated['detail'])) {
                 foreach ($validated['detail'] as $detail) {
                     DetailDaftarHarga::create([
                         'daftar_harga_id' => $daftarHarga->id,
@@ -108,6 +113,7 @@ class DaftarHargaController extends Controller
                         'satuan_id' => $detail['satuan_id'],
                         'harga_jual' => $detail['harga_jual'],
                         'diskon' => $detail['diskon'] ?? 0,
+                        'is_active' => $detail['is_active'] ?? true,
                         'created_by' => Auth::id(),
                         'updated_by' => Auth::id(),
                     ]);
@@ -119,7 +125,7 @@ class DaftarHargaController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Daftar harga berhasil ditambahkan'
+                    'message' => 'Daftar harga berhasil ditambahkan',
                 ]);
             }
 
@@ -133,14 +139,14 @@ class DaftarHargaController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal menambahkan daftar harga: ' . $e->getMessage()
+                    'message' => 'Gagal menambahkan daftar harga: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Gagal menambahkan daftar harga: ' . $e->getMessage());
+                ->with('error', 'Gagal menambahkan daftar harga: '.$e->getMessage());
         }
     }
 
@@ -177,15 +183,18 @@ class DaftarHargaController extends Controller
             'nama' => 'required|string|max:255',
             'diskon' => 'nullable|numeric|min:0|max:100',
             'status' => 'required|in:all barang,pcs',
+            'is_active' => 'required|boolean',
             'detail' => 'required_if:status,pcs|array',
             'detail.*.barang_id' => 'required_if:status,pcs|exists:barangs,id',
             'detail.*.satuan_id' => 'required_if:status,pcs|exists:satuans,id',
             'detail.*.harga_jual' => 'required_if:status,pcs|numeric|min:0',
             'detail.*.diskon' => 'nullable|numeric|min:0|max:100',
+            'detail.*.is_active' => 'required_if:status,pcs|boolean',
         ], [
             'nama.required' => 'Nama daftar harga harus diisi',
             'status.required' => 'Tipe harga harus dipilih',
             'status.in' => 'Tipe harga tidak valid',
+            'is_active.required' => 'Status aktif harus dipilih',
             'detail.required_if' => 'Minimal harus ada 1 barang untuk tipe Per Satuan',
             'detail.*.barang_id.required_if' => 'Barang harus dipilih',
             'detail.*.barang_id.exists' => 'Barang tidak valid',
@@ -193,6 +202,7 @@ class DaftarHargaController extends Controller
             'detail.*.satuan_id.exists' => 'Satuan tidak valid',
             'detail.*.harga_jual.required_if' => 'Harga jual harus diisi',
             'detail.*.harga_jual.numeric' => 'Harga jual harus berupa angka',
+            'detail.*.is_active.required_if' => 'Status aktif detail harus dipilih',
         ]);
 
         DB::beginTransaction();
@@ -203,6 +213,7 @@ class DaftarHargaController extends Controller
                 'nama' => $validated['nama'],
                 'diskon' => $validated['diskon'] ?? 0,
                 'status' => $validated['status'],
+                'is_active' => $validated['is_active'],
                 'updated_by' => Auth::id(),
             ]);
 
@@ -212,7 +223,7 @@ class DaftarHargaController extends Controller
 
             $daftarHarga->details()->delete();
 
-            if ($validated['status'] === 'pcs' && !empty($validated['detail'])) {
+            if ($validated['status'] === 'pcs' && ! empty($validated['detail'])) {
                 foreach ($validated['detail'] as $detail) {
                     DetailDaftarHarga::create([
                         'daftar_harga_id' => $daftarHarga->id,
@@ -220,6 +231,7 @@ class DaftarHargaController extends Controller
                         'satuan_id' => $detail['satuan_id'],
                         'harga_jual' => $detail['harga_jual'],
                         'diskon' => $detail['diskon'] ?? 0,
+                        'is_active' => $detail['is_active'] ?? true,
                         'created_by' => Auth::id(),
                         'updated_by' => Auth::id(),
                     ]);
@@ -231,7 +243,7 @@ class DaftarHargaController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Daftar harga berhasil diperbarui'
+                    'message' => 'Daftar harga berhasil diperbarui',
                 ]);
             }
 
@@ -245,14 +257,14 @@ class DaftarHargaController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal memperbarui daftar harga: ' . $e->getMessage()
+                    'message' => 'Gagal memperbarui daftar harga: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Gagal memperbarui daftar harga: ' . $e->getMessage());
+                ->with('error', 'Gagal memperbarui daftar harga: '.$e->getMessage());
         }
     }
 
@@ -282,7 +294,7 @@ class DaftarHargaController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Daftar harga berhasil dihapus'
+                    'message' => 'Daftar harga berhasil dihapus',
                 ]);
             }
 
@@ -296,13 +308,13 @@ class DaftarHargaController extends Controller
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal menghapus daftar harga: ' . $e->getMessage()
+                    'message' => 'Gagal menghapus daftar harga: '.$e->getMessage(),
                 ], 500);
             }
 
             return redirect()
                 ->back()
-                ->with('error', 'Gagal menghapus daftar harga: ' . $e->getMessage());
+                ->with('error', 'Gagal menghapus daftar harga: '.$e->getMessage());
         }
     }
 }

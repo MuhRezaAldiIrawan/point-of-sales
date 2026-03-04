@@ -13,12 +13,14 @@ class DaftarHarga extends Model
         'nama',
         'diskon',
         'status',
+        'is_active',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'diskon' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     /**

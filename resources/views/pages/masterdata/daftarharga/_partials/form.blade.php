@@ -76,6 +76,28 @@
 
                                         <div class="col-md-3">
                                             <div class="form-group">
+                                                <label for="is_active">Status Aktif <span
+                                                        class="text-danger">*</span></label>
+                                                <select id="is_active"
+                                                    class="form-control @error('is_active') is-invalid @enderror"
+                                                    name="is_active" required>
+                                                    <option value="1"
+                                                        {{ (string) old('is_active', $daftarHarga->is_active ?? 1) === '1' ? 'selected' : '' }}>
+                                                        Aktif
+                                                    </option>
+                                                    <option value="0"
+                                                        {{ (string) old('is_active', $daftarHarga->is_active ?? 1) === '0' ? 'selected' : '' }}>
+                                                        Nonaktif
+                                                    </option>
+                                                </select>
+                                                @error('is_active')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <div class="form-group">
                                                 <label for="diskon">Diskon Global (%)</label>
                                                 <div class="input-group">
                                                     <input type="number" id="diskon"
@@ -118,69 +140,80 @@
                         </div>
                     </div>
                 </div>
-        </div>
-    </div>
-</section>
-
-<div id="barang-item-template" style="display: none;">
-    <div class="barang-item border rounded p-3 mb-3 bg-light">
-        <div class="row align-items-end">
-            <div class="col-md-4">
-                <div class="form-group mb-md-0">
-                    <label class="font-weight-bold">Barang <span class="text-danger">*</span></label>
-                    <select name="detail[INDEX][barang_id]" class="form-control barang-select" required>
-                        <option value="">Pilih Barang</option>
-                        @foreach ($barangs ?? [] as $barang)
-                            <option value="{{ $barang->id }}"
-                                data-harga-beli="{{ $barang->detailBarang->first()->harga_beli ?? 0 }}"
-                                data-harga-jual="{{ $barang->detailBarang->first()->harga_jual ?? 0 }}"
-                                data-satuan-id="{{ $barang->detailBarang->first()->satuan_id ?? '' }}"
-                                data-satuan-nama="{{ $barang->detailBarang->first()->satuan->nama ?? '' }}">
-                                {{ $barang->nama_barang }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="form-group mb-md-0">
-                    <label class="font-weight-bold">Satuan</label>
-                    <select name="detail[INDEX][satuan_id]" class="form-control satuan-select" required>
-                        <option value="">Pilih Satuan</option>
-                        @foreach ($satuans ?? [] as $satuan)
-                            <option value="{{ $satuan->id }}">{{ $satuan->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="form-group mb-md-0">
-                    <label class="font-weight-bold">Harga Jual</label>
-                    <input type="text" name="detail[INDEX][harga_jual]" class="form-control harga-jual"
-                        placeholder="0" required>
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="form-group mb-md-0">
-                    <label class="font-weight-bold">Diskon (%)</label>
-                    <input type="number" name="detail[INDEX][diskon]" class="form-control" step="0.01"
-                        min="0" max="100" placeholder="0" value="0">
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <div class="form-group mb-md-0">
-                    <button type="button" class="btn btn-danger btn-block remove-barang-btn">
-                        <i class="ft-trash-2"></i> Hapus
-                    </button>
-                </div>
             </div>
         </div>
+    </section>
+
+    <div id="barang-item-template" style="display: none;">
+        <div class="barang-item border rounded p-3 mb-3 bg-light">
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <div class="form-group mb-md-0">
+                        <label class="font-weight-bold">Barang <span class="text-danger">*</span></label>
+                        <select name="detail[INDEX][barang_id]" class="form-control barang-select" required>
+                            <option value="">Pilih Barang</option>
+                            @foreach ($barangs ?? [] as $barang)
+                                <option value="{{ $barang->id }}"
+                                    data-harga-beli="{{ $barang->detailBarang->first()->harga_beli ?? 0 }}"
+                                    data-harga-jual="{{ $barang->detailBarang->first()->harga_jual ?? 0 }}"
+                                    data-satuan-id="{{ $barang->detailBarang->first()->satuan_id ?? '' }}"
+                                    data-satuan-nama="{{ $barang->detailBarang->first()->satuan->nama ?? '' }}">
+                                    {{ $barang->nama_barang }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group mb-md-0">
+                        <label class="font-weight-bold">Satuan</label>
+                        <select name="detail[INDEX][satuan_id]" class="form-control satuan-select" required>
+                            <option value="">Pilih Satuan</option>
+                            @foreach ($satuans ?? [] as $satuan)
+                                <option value="{{ $satuan->id }}">{{ $satuan->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group mb-md-0">
+                        <label class="font-weight-bold">Harga Jual</label>
+                        <input type="text" name="detail[INDEX][harga_jual]" class="form-control harga-jual"
+                            placeholder="0" required>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group mb-md-0">
+                        <label class="font-weight-bold">Diskon (%)</label>
+                        <input type="number" name="detail[INDEX][diskon]" class="form-control" step="0.01"
+                            min="0" max="100" placeholder="0" value="0">
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group mb-md-0">
+                        <label class="font-weight-bold">Status Aktif</label>
+                        <select name="detail[INDEX][is_active]" class="form-control" required>
+                            <option value="1" selected>Aktif</option>
+                            <option value="0">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group mb-md-0">
+                        <button type="button" class="btn btn-danger btn-block remove-barang-btn"
+                            style="margin-top: 32px;">
+                            <i class="ft-trash-2"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 @endsection
 @section('css')
     <style>
@@ -285,10 +318,11 @@
                 $('#detail-barang-section').show();
             }
 
-            @if(isset($daftarHarga) && $daftarHarga->status === 'pcs' && $daftarHarga->details->count() > 0)
-                @foreach($daftarHarga->details as $detail)
+            @if (isset($daftarHarga) && $daftarHarga->status === 'pcs' && $daftarHarga->details->count() > 0)
+                @foreach ($daftarHarga->details as $detail)
                     const template{{ $loop->index }} = $('#barang-item-template').html();
-                    const newItem{{ $loop->index }} = template{{ $loop->index }}.replace(/INDEX/g, {{ $loop->index }});
+                    const newItem{{ $loop->index }} = template{{ $loop->index }}.replace(/INDEX/g,
+                        {{ $loop->index }});
                     $('#barang-list').append(newItem{{ $loop->index }});
 
                     const item{{ $loop->index }} = $('#barang-list .barang-item:last');
@@ -296,6 +330,8 @@
                     item{{ $loop->index }}.find('.satuan-select').val({{ $detail->satuan_id ?? '' }});
                     item{{ $loop->index }}.find('.harga-jual').val(formatRupiah({{ $detail->harga_jual }}));
                     item{{ $loop->index }}.find('input[name*="[diskon]"]').val({{ $detail->diskon }});
+                    item{{ $loop->index }}.find('select[name*="[is_active]"]').val(
+                        '{{ (int) ($detail->is_active ?? 1) }}');
 
                     barangIndex = {{ $loop->index + 1 }};
                 @endforeach
@@ -390,7 +426,8 @@
                                 showConfirmButton: false,
                                 timer: 2000
                             }).then(() => {
-                                window.location.href = "{{ route('daftarharga.index') }}";
+                                window.location.href =
+                                    "{{ route('daftarharga.index') }}";
                             });
                         }
                     },
@@ -412,7 +449,8 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Oops...',
-                                text: errors.message || 'Terjadi kesalahan saat menyimpan data',
+                                text: errors.message ||
+                                    'Terjadi kesalahan saat menyimpan data',
                                 confirmButtonText: 'OK'
                             });
                         }

@@ -15,6 +15,7 @@ class DetailDaftarHarga extends Model
         'harga_jual',
         'satuan_id',
         'diskon',
+        'is_active',
         'created_by',
         'updated_by',
     ];
@@ -23,6 +24,7 @@ class DetailDaftarHarga extends Model
         'harga_jual' => 'decimal:2',
         'satuan_id' => 'integer',
         'diskon' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     /**
