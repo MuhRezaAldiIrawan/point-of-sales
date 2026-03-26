@@ -40,8 +40,8 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 storage bootstrap/cache
 
 # Copy nginx config
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY docker/default.conf /etc/nginx/sites-available/default
+# COPY docker/nginx.conf /etc/nginx/nginx.conf
+# COPY docker/default.conf /etc/nginx/sites-available/default
 
 EXPOSE 9000
 
