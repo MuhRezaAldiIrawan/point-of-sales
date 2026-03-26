@@ -5,47 +5,44 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
+    libzip-dev \
+    libicu-dev \
     zip \
     unzip \
-    nginx
+    nginx \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install PHP extensions (dengan config GD)
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# Get latest Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
-
-# Copy existing application directory permissions
-COPY --chown=www-data:www-data . /var/www
+# Copy composer dulu (biar cache jalan)
+COPY composer.json composer.lock ./
 
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Generate application key (optional, bisa juga via .env)
-# RUN php artisan key:generate
+# Copy seluruh project
+COPY . .
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www/storage \
-    && chmod -R 755 /var/www/bootstrap/cache
+    && chmod -R 755 storage bootstrap/cache
 
-# Copy nginx configuration
+# Copy nginx config
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/default.conf /etc/nginx/sites-available/default
 
-# Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-# Start PHP-FPM
 CMD ["php-fpm"]
