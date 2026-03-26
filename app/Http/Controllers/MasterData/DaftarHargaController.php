@@ -107,6 +107,15 @@ class DaftarHargaController extends Controller
 
             if ($validated['status'] === 'pcs' && ! empty($validated['detail'])) {
                 foreach ($validated['detail'] as $detail) {
+                    if (($detail['is_active'] ?? false)) {
+                        DetailDaftarHarga::where('barang_id', $detail['barang_id'])
+                            ->where('is_active', true)
+                            ->update([
+                                'is_active' => false,
+                                'updated_by' => Auth::id(),
+                            ]);
+                    }
+
                     DetailDaftarHarga::create([
                         'daftar_harga_id' => $daftarHarga->id,
                         'barang_id' => $detail['barang_id'],
@@ -225,6 +234,15 @@ class DaftarHargaController extends Controller
 
             if ($validated['status'] === 'pcs' && ! empty($validated['detail'])) {
                 foreach ($validated['detail'] as $detail) {
+                    if (($detail['is_active'] ?? false)) {
+                        DetailDaftarHarga::where('barang_id', $detail['barang_id'])
+                            ->where('is_active', true)
+                            ->update([
+                                'is_active' => false,
+                                'updated_by' => Auth::id(),
+                            ]);
+                    }
+
                     DetailDaftarHarga::create([
                         'daftar_harga_id' => $daftarHarga->id,
                         'barang_id' => $detail['barang_id'],
