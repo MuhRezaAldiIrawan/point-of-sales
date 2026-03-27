@@ -224,6 +224,10 @@
             align-items: stretch;
         }
 
+        .pelanggan-col {
+            padding-right: 1.25rem;
+        }
+
         .select-group .select2-container {
             flex: 1;
         }
@@ -233,15 +237,15 @@
             border-left: none;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 0 12px;
-            font-size: 14px;
+            padding: 0 8px;
+            font-size: 12px;
             font-weight: 600;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 0 4px 4px 0;
-            min-width: 45px;
+            min-width: 36px;
         }
 
         .select-group .btn-add:hover {
@@ -273,7 +277,7 @@
             font-family: 'Courier New', monospace;
             max-width: 400px;
             margin: 0 auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .receipt-header {
@@ -313,9 +317,12 @@
             body * {
                 visibility: hidden;
             }
-            .receipt-preview, .receipt-preview * {
+
+            .receipt-preview,
+            .receipt-preview * {
                 visibility: visible;
             }
+
             .receipt-preview {
                 position: absolute;
                 left: 0;
@@ -351,14 +358,15 @@
                                         id="tanggal_penjualan" value="{{ date('Y-m-d') }}" required>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4 pelanggan-col">
                                 <div class="form-group">
                                     <label>Pelanggan <span class="text-danger">*</span></label>
                                     <div class="select-group">
-                                        <select class="form-control select2" name="pelanggan_id" id="pelanggan_id" required>
+                                        <select class="form-control" name="pelanggan_id" id="pelanggan_id" required>
                                             <option value="">Pilih Pelanggan</option>
                                         </select>
-                                        <button type="button" class="btn btn-add" data-toggle="modal" data-target="#modalPelanggan" title="Tambah Pelanggan">
+                                        <button type="button" class="btn btn-add" data-toggle="modal"
+                                            data-target="#modalPelanggan" title="Tambah Pelanggan">
                                             <i class="ft-plus"></i>
                                         </button>
                                     </div>
@@ -451,8 +459,8 @@
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Rp</span>
                                             </div>
-                                            <input type="text" class="form-control" name="biaya_kirim" id="biaya_kirim"
-                                                value="0">
+                                            <input type="text" class="form-control" name="biaya_kirim"
+                                                id="biaya_kirim" value="0">
                                         </div>
                                     </div>
                                 </div>
@@ -557,7 +565,8 @@
     <div class="modal fade" id="modalCetakStruk" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <h5 class="modal-title">
                         <i class="ft-printer"></i> Konfirmasi Cetak Struk
                     </h5>
@@ -591,7 +600,8 @@
     <div class="modal fade" id="modalPelanggan" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <h5 class="modal-title">
                         <i class="ft-users"></i> Tambah Pelanggan Baru
                     </h5>
@@ -605,7 +615,8 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Nama Pelanggan <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="nama" id="pelanggan_nama" required>
+                                    <input type="text" class="form-control" name="nama" id="pelanggan_nama"
+                                        required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -642,7 +653,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Batas Kredit</label>
-                                    <input type="number" class="form-control" name="batas_kredit" id="pelanggan_batas_kredit" value="0" min="0">
+                                    <input type="number" class="form-control" name="batas_kredit"
+                                        id="pelanggan_batas_kredit" value="0" min="0">
                                 </div>
                             </div>
                         </div>
@@ -677,24 +689,25 @@
             let items = [];
             const ppnRate = {{ $ppnRate ?? 11 }} / 100; // PPN rate from settings
 
-            $('.select2').select2({
-                placeholder: 'Pilih...',
-                allowClear: true
-            });
+            initializePelangganSelect2();
 
             $('#search_barang').select2({
                 placeholder: 'Ketik nama atau kode barang...',
                 allowClear: true,
+                width: '100%',
+                dropdownParent: $('body'),
                 ajax: {
                     url: '{{ route('api.barang.search') }}',
                     dataType: 'json',
-                    delay: 250,
+                    delay: 300,
                     data: function(params) {
                         return {
-                            q: params.term
+                            q: params.term,
+                            page: params.page || 1
                         };
                     },
-                    processResults: function(data) {
+                    processResults: function(data, params) {
+                        params.page = params.page || 1;
                         return {
                             results: data.results.map(function(item) {
                                 return {
@@ -705,31 +718,56 @@
                                     satuan: item.satuan,
                                     nama_barang: item.nama_barang
                                 };
-                            })
+                            }),
+                            pagination: {
+                                more: data.pagination ? data.pagination.more : false
+                            }
                         };
                     }
                 }
             });
 
-            $('#pelanggan_id').select2({
-                placeholder: 'Pilih Pelanggan',
-                allowClear: true,
-                ajax: {
-                    url: '{{ route('api.pelanggan.search') }}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term
-                        };
+            function initializePelangganSelect2() {
+                $('#pelanggan_id').select2({
+                    placeholder: '-- Cari Nama / No HP Pelanggan --',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('body'),
+                    ajax: {
+                        url: '{{ route('api.pelanggan.search') }}',
+                        dataType: 'json',
+                        delay: 300,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data, params) {
+                            params.page = params.page || 1;
+                            return {
+                                results: data.results,
+                                pagination: {
+                                    more: data.pagination ? data.pagination.more : false
+                                }
+                            };
+                        },
+                        cache: false
                     },
-                    processResults: function(data) {
-                        return {
-                            results: data.results
-                        };
+                    minimumInputLength: 1,
+                    language: {
+                        noResults: function() {
+                            return 'Pelanggan tidak ditemukan';
+                        },
+                        searching: function() {
+                            return 'Mencari...';
+                        },
+                        inputTooShort: function() {
+                            return 'Ketik minimal 1 karakter untuk mencari';
+                        }
                     }
-                }
-            });
+                });
+            }
 
             $('#pelanggan_id').on('select2:select', function(e) {
                 const data = e.params.data;
@@ -1132,10 +1170,12 @@
                                 showConfirmButton: false,
                                 timer: 1000
                             }).then(() => {
-                                const printUrl = '{{ route('penjualan.print', ':id') }}'.replace(':id', response.data.id);
+                                const printUrl = '{{ route('penjualan.print', ':id') }}'
+                                    .replace(':id', response.data.id);
                                 window.open(printUrl, '_blank');
                                 setTimeout(() => {
-                                    window.location.href = '{{ route('penjualan.index') }}';
+                                    window.location.href =
+                                        '{{ route('penjualan.index') }}';
                                 }, 500);
                             });
                         } else {
@@ -1244,7 +1284,8 @@
                         $('#modalPelanggan').modal('hide');
                         $('#formPelanggan')[0].reset();
 
-                        const newOption = new Option(response.data.nama, response.data.id, true, true);
+                        const newOption = new Option(response.data.nama, response.data.id, true,
+                            true);
                         $('#pelanggan_id').append(newOption).trigger('change');
 
                         if (response.data.alamat || response.data.no_hp) {

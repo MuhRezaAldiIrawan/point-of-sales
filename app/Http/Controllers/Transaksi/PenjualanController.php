@@ -48,8 +48,13 @@ class PenjualanController extends Controller
                 $penjualans->where('payment_method', $request->payment);
             }
 
+            // Filter by pelanggan id
+            if ($request->has('pelanggan_id') && !empty($request->pelanggan_id)) {
+                $penjualans->where('pelanggan_id', $request->pelanggan_id);
+            }
+
             // Filter by pelanggan name
-            if ($request->has('pelanggan') && !empty($request->pelanggan)) {
+            if ($request->has('pelanggan') && !empty($request->pelanggan) && empty($request->pelanggan_id)) {
                 $penjualans->whereHas('pelanggan', function($query) use ($request) {
                     $query->where('nama', 'like', '%' . $request->pelanggan . '%');
                 });
@@ -578,8 +583,22 @@ class PenjualanController extends Controller
     public function getPelanggan(Request $request)
     {
         $search = $request->get('q');
-        $pelanggans = Pelanggan::where('nama', 'like', '%' . $search . '%')
-            ->limit(10)
+        $page = (int) $request->get('page', 1);
+        $perPage = 15;
+
+        $query = Pelanggan::query();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%')
+                    ->orWhere('no_hp', 'like', '%' . $search . '%');
+            });
+        }
+
+        $total = $query->count();
+        $pelanggans = $query->orderBy('nama')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
             ->get(['id', 'nama', 'alamat', 'no_hp']);
 
         return response()->json([
@@ -591,7 +610,10 @@ class PenjualanController extends Controller
                     'alamat' => $pelanggan->alamat,
                     'telepon' => $pelanggan->no_hp
                 ];
-            })
+            }),
+            'pagination' => [
+                'more' => ($page * $perPage) < $total,
+            ],
         ]);
     }
 
