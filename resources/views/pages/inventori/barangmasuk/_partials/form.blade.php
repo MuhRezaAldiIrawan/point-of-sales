@@ -310,6 +310,7 @@
                                         <div class="form-group">
                                             <label>Cari Nama / Kode Barang</label>
                                             <select class="form-control form-control-sm" id="barang_id">
+                                                <option value=""></option>
                                             </select>
                                         </div>
                                     </div>
@@ -732,10 +733,13 @@
 
         // Reset item form
         function resetItemForm() {
-            $('#barang_id').val(null).trigger('change');
+            const barangSelect = $('#barang_id');
+            barangSelect.select2('close');
+            barangSelect.empty().append('<option value=""></option>');
+            barangSelect.val('').trigger('change');
             $('#nama_barang_display, #harga_beli, #keterangan_detail').val('');
             $('#satuan_select').html('<option value="">-- Pilih --</option>');
-            $('#isi, #jumlah').val('0');
+            $('#isi, #jumlah').val('');
             $('#total').val('');
             $('#barang_id').focus();
         }
@@ -884,12 +888,12 @@
                                         <div class="text-left">
                                             <p><strong>${response.message}</strong></p>
                                             ${response.data ? `
-                                                                <hr>
-                                                                <small class="text-muted">
-                                                                    📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
-                                                                    📦 Total Item: <strong>${response.data.total_items}</strong>
-                                                                </small>
-                                                            ` : ''}
+                                                                                <hr>
+                                                                                <small class="text-muted">
+                                                                                    📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
+                                                                                    📦 Total Item: <strong>${response.data.total_items}</strong>
+                                                                                </small>
+                                                                            ` : ''}
                                         </div>
                                     `,
                                     confirmButtonColor: SWAL_COLORS.success,
