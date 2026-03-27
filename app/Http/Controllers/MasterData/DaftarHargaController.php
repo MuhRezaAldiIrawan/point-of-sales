@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Barang;
 use App\Models\DaftarHarga;
 use App\Models\DetailDaftarHarga;
-use App\Models\Satuan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -51,15 +50,55 @@ class DaftarHargaController extends Controller
     /**
      * Show the form for creating a new resource.
      */
+    public function getBarangs(Request $request)
+    {
+        $search = $request->get('q');
+        $page = $request->get('page', 1);
+        $perPage = 15;
+
+        $query = Barang::with(['detailBarang.satuan']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_barang', 'like', "%{$search}%")
+                  ->orWhere('kode', 'like', "%{$search}%");
+            });
+        }
+
+        $total = $query->count();
+        $barangs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        $results = $barangs->map(function ($barang) {
+            $satuans = $barang->detailBarang
+                ->filter(fn ($detail) => !empty($detail->satuan))
+                ->unique('satuan_id')
+                ->map(fn ($detail) => [
+                    'id' => $detail->satuan_id,
+                    'nama' => $detail->satuan->nama,
+                    'harga_jual' => (float) $detail->harga_jual,
+                ])
+                ->values();
+
+            return [
+                'id' => $barang->id,
+                'text' => $barang->nama_barang.' - '.$barang->kode,
+                'kode' => $barang->kode,
+                'nama_barang' => $barang->nama_barang,
+                'satuans' => $satuans,
+            ];
+        });
+
+        return response()->json([
+            'results' => $results,
+            'pagination' => ['more' => ($page * $perPage) < $total],
+        ]);
+    }
+
     public function create()
     {
         $title = 'Buat Daftar Harga';
-        $barangs = Barang::with(['merek', 'jenisBarang', 'detailBarang.satuan'])
-            ->orderBy('nama_barang')
-            ->get();
-        $satuans = Satuan::all();
 
-        return view('pages.masterdata.daftarharga._partials.form', compact('title', 'barangs', 'satuans'));
+        return view('pages.masterdata.daftarharga._partials.form', compact('title'));
     }
 
     /**
@@ -173,13 +212,9 @@ class DaftarHargaController extends Controller
     public function edit(string $id)
     {
         $title = 'Edit Daftar Harga';
-        $daftarHarga = DaftarHarga::with('details.barang')->findOrFail($id);
-        $barangs = Barang::with(['merek', 'jenisBarang', 'detailBarang.satuan'])
-            ->orderBy('nama_barang')
-            ->get();
-        $satuans = Satuan::all();
+        $daftarHarga = DaftarHarga::with(['details.barang.detailBarang.satuan', 'details.satuan'])->findOrFail($id);
 
-        return view('pages.masterdata.daftarharga._partials.form', compact('title', 'daftarHarga', 'barangs', 'satuans'));
+        return view('pages.masterdata.daftarharga._partials.form', compact('title', 'daftarHarga'));
     }
 
     /**

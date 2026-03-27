@@ -43,6 +43,11 @@ class DetailDaftarHarga extends Model
         return $this->belongsTo(Barang::class, 'barang_id');
     }
 
+    public function satuan()
+    {
+        return $this->belongsTo(Satuan::class, 'satuan_id');
+    }
+
     /**
      * Get the user that created the detail.
      */

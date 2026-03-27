@@ -112,6 +112,7 @@ Route::controller(BarangController::class)->group(function () {
 Route::controller(DaftarHargaController::class)->group(function () {
     Route::get('/daftar-harga', 'index')->name('daftarharga.index');
     Route::get('/daftar-harga/create', 'create')->name('daftarharga.create');
+    Route::get('/daftar-harga/get-barangs', 'getBarangs')->name('daftarharga.getBarangs');
     Route::post('/daftar-harga', 'store')->name('daftarharga.store');
     Route::get('/daftar-harga/{id}/edit', 'edit')->name('daftarharga.edit');
     Route::put('/daftar-harga/{id}', 'update')->name('daftarharga.update');

@@ -1,5 +1,53 @@
 @extends('layouts.main')
 
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/vendors/css/forms/selects/select2.min.css') }}">
+    <style>
+        .barang-item {
+            background: linear-gradient(to right, #f8f9fa 0%, #ffffff 100%);
+            border-left: 4px solid #007bff !important;
+            transition: all 0.3s ease;
+        }
+
+        .barang-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-section {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        #detail-barang-section {
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-actions {
+            border-top: 1px solid #e9ecef;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        #barang-item-template {
+            display: none !important;
+        }
+    </style>
+@endsection
+
 @section('content')
     <section id="basic-form-layouts">
         <div class="row">
@@ -119,8 +167,7 @@
                                     <div id="detail-barang-section" style="display: none;">
                                         <h4 class="form-section mt-2"><i class="ft-package"></i> Detail Barang</h4>
 
-                                        <div id="barang-list" class="mb-2">
-                                        </div>
+                                        <div id="barang-list" class="mb-2"></div>
 
                                         <button type="button" class="btn btn-primary btn-sm" id="add-barang-btn">
                                             <i class="ft-plus"></i> Tambah Barang
@@ -144,144 +191,30 @@
         </div>
     </section>
 
-    <div id="barang-item-template" style="display: none;">
-        <div class="barang-item border rounded p-3 mb-3 bg-light">
-            <div class="row align-items-end">
-                <div class="col-md-4">
-                    <div class="form-group mb-md-0">
-                        <label class="font-weight-bold">Barang <span class="text-danger">*</span></label>
-                        <select name="detail[INDEX][barang_id]" class="form-control barang-select" required>
-                            <option value="">Pilih Barang</option>
-                            @foreach ($barangs ?? [] as $barang)
-                                <option value="{{ $barang->id }}"
-                                    data-harga-beli="{{ $barang->detailBarang->first()->harga_beli ?? 0 }}"
-                                    data-harga-jual="{{ $barang->detailBarang->first()->harga_jual ?? 0 }}"
-                                    data-satuan-id="{{ $barang->detailBarang->first()->satuan_id ?? '' }}"
-                                    data-satuan-nama="{{ $barang->detailBarang->first()->satuan->nama ?? '' }}">
-                                    {{ $barang->nama_barang }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-2">
-                    <div class="form-group mb-md-0">
-                        <label class="font-weight-bold">Satuan</label>
-                        <select name="detail[INDEX][satuan_id]" class="form-control satuan-select" required>
-                            <option value="">Pilih Satuan</option>
-                            @foreach ($satuans ?? [] as $satuan)
-                                <option value="{{ $satuan->id }}">{{ $satuan->nama }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-2">
-                    <div class="form-group mb-md-0">
-                        <label class="font-weight-bold">Harga Jual</label>
-                        <input type="text" name="detail[INDEX][harga_jual]" class="form-control harga-jual"
-                            placeholder="0" required>
-                    </div>
-                </div>
-
-                <div class="col-md-2">
-                    <div class="form-group mb-md-0">
-                        <label class="font-weight-bold">Diskon (%)</label>
-                        <input type="number" name="detail[INDEX][diskon]" class="form-control" step="0.01"
-                            min="0" max="100" placeholder="0" value="0">
-                    </div>
-                </div>
-
-                <div class="col-md-2">
-                    <div class="form-group mb-md-0">
-                        <label class="font-weight-bold">Status Aktif</label>
-                        <select name="detail[INDEX][is_active]" class="form-control" required>
-                            <option value="1" selected>Aktif</option>
-                            <option value="0">Nonaktif</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-2">
-                    <div class="form-group mb-md-0">
-                        <button type="button" class="btn btn-danger btn-block remove-barang-btn"
-                            style="margin-top: 32px;">
-                            <i class="ft-trash-2"></i> Hapus
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-@endsection
-@section('css')
-    <style>
-        .barang-item {
-            background: linear-gradient(to right, #f8f9fa 0%, #ffffff 100%);
-            border-left: 4px solid #007bff !important;
-            transition: all 0.3s ease;
-        }
-
-        .barang-item:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .form-section {
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        #detail-barang-section {
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .form-actions {
-            border-top: 1px solid #e9ecef;
-            padding-top: 20px;
-            margin-top: 20px;
-        }
-
-        #barang-item-template {
-            display: none !important;
-        }
-    </style>
+    <div id="barang-item-template" style="display: none;"></div>
 @endsection
 
 @section('js')
+    <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}" type="text/javascript"></script>
     <script>
         $(document).ready(function() {
             let barangIndex = 0;
 
             function formatRupiah(angka) {
-                return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                const value = parseInt(angka, 10);
+                if (isNaN(value)) {
+                    return '';
+                }
+                return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             }
 
             function unformatRupiah(value) {
-                return value.replace(/\./g, '');
+                return (value || '').replace(/\./g, '');
             }
 
             $(document).on('input', '.harga-jual', function() {
-                let value = $(this).val().replace(/\D/g, ''); // remove non-digit
-                if (value) {
-                    $(this).val(formatRupiah(value));
-                } else {
-                    $(this).val('');
-                }
+                const value = $(this).val().replace(/\D/g, '');
+                $(this).val(value ? formatRupiah(value) : '');
             });
 
             function toggleDiskonGlobal() {
@@ -294,108 +227,254 @@
                 }
             }
 
+            function destroyAllSelect2() {
+                $('#barang-list .barang-select').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
+            }
+
             $('#status').on('change', function() {
                 toggleDiskonGlobal();
-                const status = $(this).val();
-                console.log('Status changed to:', status);
-
-                if (status === 'pcs') {
+                if ($(this).val() === 'pcs') {
                     $('#detail-barang-section').slideDown(300);
-                    console.log('Showing detail section');
                 } else {
                     $('#detail-barang-section').slideUp(300);
+                    destroyAllSelect2();
                     $('#barang-list').empty();
                     barangIndex = 0;
-                    console.log('Hiding detail section');
                 }
             });
 
-            // Initial toggle
             toggleDiskonGlobal();
 
-            const initialStatus = $('#status').val();
-            if (initialStatus === 'pcs') {
+            if ($('#status').val() === 'pcs') {
                 $('#detail-barang-section').show();
             }
 
-            @if (isset($daftarHarga) && $daftarHarga->status === 'pcs' && $daftarHarga->details->count() > 0)
-                @foreach ($daftarHarga->details as $detail)
-                    const template{{ $loop->index }} = $('#barang-item-template').html();
-                    const newItem{{ $loop->index }} = template{{ $loop->index }}.replace(/INDEX/g,
-                        {{ $loop->index }});
-                    $('#barang-list').append(newItem{{ $loop->index }});
+            function createBarangRow(index) {
+                return `
+                <div class="barang-item border rounded p-2 mb-3 bg-light" data-index="${index}">
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">Barang <span class="text-danger">*</span></label>
+                                <select name="detail[${index}][barang_id]" class="form-control barang-select" required>
+                                    <option value="">-- Cari Nama / Kode Barang --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">Satuan <span class="text-danger">*</span></label>
+                                <select name="detail[${index}][satuan_id]" class="form-control satuan-select" required>
+                                    <option value="">-- Pilih --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">Harga Jual <span class="text-danger">*</span></label>
+                                <input type="text" name="detail[${index}][harga_jual]" class="form-control harga-jual" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">Diskon (%)</label>
+                                <input type="number" name="detail[${index}][diskon]" class="form-control" step="0.01" min="0" max="100" placeholder="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">Aktif</label>
+                                <select name="detail[${index}][is_active]" class="form-control">
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <div class="form-group mb-0">
+                                <button type="button" class="btn btn-danger btn-sm btn-block remove-barang-btn" style="margin-top:32px">
+                                    <i class="ft-trash-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
 
-                    const item{{ $loop->index }} = $('#barang-list .barang-item:last');
-                    item{{ $loop->index }}.find('.barang-select').val({{ $detail->barang_id }});
-                    item{{ $loop->index }}.find('.satuan-select').val({{ $detail->satuan_id ?? '' }});
-                    item{{ $loop->index }}.find('.harga-jual').val(formatRupiah({{ $detail->harga_jual }}));
-                    item{{ $loop->index }}.find('input[name*="[diskon]"]').val({{ $detail->diskon }});
-                    item{{ $loop->index }}.find('select[name*="[is_active]"]').val(
-                        '{{ (int) ($detail->is_active ?? 1) }}');
+            function initRowSelect2(row) {
+                const select = row.find('.barang-select');
 
-                    barangIndex = {{ $loop->index + 1 }};
-                @endforeach
-            @endif
+                select.select2({
+                    placeholder: '-- Cari Nama / Kode Barang --',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('body'),
+                    ajax: {
+                        url: '{{ route('daftarharga.getBarangs') }}',
+                        dataType: 'json',
+                        delay: 300,
+                        data: function(params) {
+                            return {
+                                q: params.term,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results,
+                                pagination: {
+                                    more: data.pagination.more
+                                }
+                            };
+                        },
+                        cache: false
+                    },
+                    minimumInputLength: 1,
+                    language: {
+                        noResults: function() {
+                            return 'Barang tidak ditemukan';
+                        },
+                        searching: function() {
+                            return 'Mencari...';
+                        },
+                        inputTooShort: function() {
+                            return 'Ketik minimal 1 karakter untuk mencari';
+                        }
+                    }
+                });
 
-            $('#add-barang-btn').on('click', function() {
-                console.log('Add button clicked');
-                const template = $('#barang-item-template').html();
-                console.log('Template:', template ? 'Found' : 'Not found');
+                select.on('change', function() {
+                    handleBarangChange($(this).closest('.barang-item'));
+                });
+            }
 
-                if (template) {
-                    const newItem = template.replace(/INDEX/g, barangIndex);
-                    $('#barang-list').append(newItem);
-                    barangIndex++;
-                    console.log('Item added, new index:', barangIndex);
+            function populateRowSatuan(satuanSelect, satuans, selectedSatuanId = null) {
+                satuanSelect.html('<option value="">-- Pilih --</option>');
+
+                satuans.forEach(function(satuan) {
+                    const selected = selectedSatuanId && String(selectedSatuanId) === String(satuan.id);
+                    satuanSelect.append(
+                        $('<option>', {
+                            value: satuan.id,
+                            text: satuan.nama,
+                            'data-harga-jual': satuan.harga_jual,
+                            selected: selected
+                        })
+                    );
+                });
+
+                if (!selectedSatuanId && satuans.length === 1) {
+                    satuanSelect.find('option:eq(1)').prop('selected', true);
+                }
+
+                satuanSelect.trigger('change');
+            }
+
+            function handleBarangChange(row) {
+                const select = row.find('.barang-select');
+                const selectedData = select.select2('data');
+                const satuanSelect = row.find('.satuan-select');
+
+                if (selectedData && selectedData.length > 0 && selectedData[0].id) {
+                    const item = selectedData[0];
+                    populateRowSatuan(satuanSelect, item.satuans || []);
+                } else {
+                    satuanSelect.html('<option value="">-- Pilih --</option>');
+                    row.find('.harga-jual').val('');
+                }
+            }
+
+            $(document).on('change', '.satuan-select', function() {
+                const row = $(this).closest('.barang-item');
+                const hargaJual = $(this).find('option:selected').data('harga-jual');
+                if (hargaJual !== undefined && hargaJual !== '') {
+                    row.find('.harga-jual').val(formatRupiah(hargaJual));
+                } else {
+                    row.find('.harga-jual').val('');
                 }
             });
 
+            $('#add-barang-btn').on('click', function() {
+                const html = createBarangRow(barangIndex);
+                $('#barang-list').append(html);
+                const newRow = $('#barang-list .barang-item:last');
+                initRowSelect2(newRow);
+                barangIndex++;
+            });
+
             $(document).on('click', '.remove-barang-btn', function() {
-                const item = $(this).closest('.barang-item');
-                item.fadeOut(300, function() {
+                const row = $(this).closest('.barang-item');
+                const select = row.find('.barang-select');
+                if (select.hasClass('select2-hidden-accessible')) {
+                    select.select2('destroy');
+                }
+                row.fadeOut(300, function() {
                     $(this).remove();
                 });
             });
 
-            $(document).on('change', '.barang-select', function() {
-                const option = $(this).find('option:selected');
-                const hargaBeli = option.data('harga-beli') || 0;
-                const hargaJual = option.data('harga-jual') || 0;
-                const satuanId = option.data('satuan-id') || '';
-                const satuanNama = option.data('satuan-nama') || '';
+            @if (isset($daftarHarga) && $daftarHarga->status === 'pcs' && $daftarHarga->details->count() > 0)
+                @php
+                    $existingDetails = $daftarHarga->details->map(
+                        fn($d) => [
+                            'barang_id' => $d->barang_id,
+                            'barang_text' => ($d->barang->nama_barang ?? '') . ' - ' . ($d->barang->kode ?? ''),
+                            'satuans' => $d->barang->detailBarang
+                                ->filter(fn($db) => !empty($db->satuan))
+                                ->unique('satuan_id')
+                                ->map(
+                                    fn($db) => [
+                                        'id' => $db->satuan_id,
+                                        'nama' => $db->satuan->nama,
+                                        'harga_jual' => (float) $db->harga_jual,
+                                    ],
+                                )
+                                ->values(),
+                            'satuan_id' => $d->satuan_id,
+                            'harga_jual' => (float) $d->harga_jual,
+                            'diskon' => (float) $d->diskon,
+                            'is_active' => (int) $d->is_active,
+                        ],
+                    );
+                @endphp
+                const existingDetails = {!! json_encode($existingDetails) !!};
 
-                console.log('Barang changed:', {
-                    barangId: $(this).val(),
-                    satuanId: satuanId,
-                    satuanNama: satuanNama
+                existingDetails.forEach(function(detail) {
+                    const index = barangIndex;
+                    const html = createBarangRow(index);
+                    $('#barang-list').append(html);
+
+                    const row = $('#barang-list .barang-item:last');
+                    initRowSelect2(row);
+
+                    const barangSelect = row.find('.barang-select');
+                    const option = new Option(detail.barang_text, detail.barang_id, true, true);
+                    barangSelect.append(option).trigger('change.select2');
+
+                    populateRowSatuan(row.find('.satuan-select'), detail.satuans, detail.satuan_id);
+
+                    row.find('.harga-jual').val(detail.harga_jual ? formatRupiah(detail.harga_jual) : '');
+                    row.find('input[name*="[diskon]"]').val(detail.diskon);
+                    row.find('select[name*="[is_active]"]').val(String(detail.is_active));
+
+                    barangIndex++;
                 });
-
-                const item = $(this).closest('.barang-item');
-                item.find('.harga-jual').val(formatRupiah(hargaJual));
-                item.find('.satuan-select').val(satuanId).trigger('change');
-
-                console.log('Satuan select set to:', satuanId);
-            });
-
-            $(document).on('blur', 'input[type="number"]', function() {
-                const value = parseFloat($(this).val());
-                if (!isNaN(value)) {
-                    $(this).val(value.toFixed(2));
-                }
-            });
+            @endif
 
             $('.form').on('submit', function(e) {
                 e.preventDefault();
 
-                // Clean harga-jual values before submit
                 $('.harga-jual').each(function() {
-                    let rawValue = unformatRupiah($(this).val());
+                    const rawValue = unformatRupiah($(this).val());
                     $(this).val(rawValue);
                 });
 
-                var formData = new FormData(this);
-                var url = $(this).attr('action');
-                var method = $(this).find('input[name="_method"]').val() || 'POST';
+                const formData = new FormData(this);
+                const url = $(this).attr('action');
 
                 Swal.fire({
                     title: 'Menyimpan...',
@@ -427,18 +506,17 @@
                                 timer: 2000
                             }).then(() => {
                                 window.location.href =
-                                    "{{ route('daftarharga.index') }}";
+                                    '{{ route('daftarharga.index') }}';
                             });
                         }
                     },
                     error: function(xhr) {
-                        var errors = xhr.responseJSON;
+                        const errors = xhr.responseJSON;
                         if (errors && errors.errors) {
-                            var errorMessage = '';
+                            let errorMessage = '';
                             $.each(errors.errors, function(key, value) {
                                 errorMessage += value[0] + '<br>';
                             });
-
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Validasi Gagal',
@@ -449,7 +527,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Oops...',
-                                text: errors.message ||
+                                text: (errors && errors.message) ||
                                     'Terjadi kesalahan saat menyimpan data',
                                 confirmButtonText: 'OK'
                             });
