@@ -125,6 +125,25 @@
             color: white;
         }
 
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         @media (max-width: 768px) {
             .detail-header {
                 padding: 15px;
@@ -157,6 +176,9 @@
                         <div>
                             <h4 class="mb-2">Detail Barang Masuk</h4>
                             <span class="detail-badge">{{ $barangMasuk->no_reff }}</span>
+                            <span class="status-badge {{ $barangMasuk->isCancelled() ? 'cancelled' : 'success' }} ml-2">
+                                {{ $barangMasuk->isCancelled() ? 'Cancelled' : 'Success' }}
+                            </span>
                         </div>
                         <div class="text-right">
                             <div class="text-white-50 small">Tanggal Masuk</div>
@@ -179,6 +201,10 @@
 
                                             <div class="info-label">Jenis Stok</div>
                                             <div class="info-value">{{ $barangMasuk->jenisStok->nama ?? '-' }}</div>
+
+                                            <div class="info-label">Status</div>
+                                            <div class="info-value">
+                                                {{ $barangMasuk->isCancelled() ? 'Cancelled' : 'Success' }}</div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="info-label">Tanggal Masuk</div>
@@ -196,15 +222,27 @@
                                     <div class="summary-label">Total Item</div>
                                 </div>
                                 <div class="summary-card mb-3">
-                                    <div class="summary-value">{{ number_format($barangMasuk->detailBarangMasuk->sum('jumlah')) }}</div>
+                                    <div class="summary-value">
+                                        {{ number_format($barangMasuk->detailBarangMasuk->sum('jumlah')) }}</div>
                                     <div class="summary-label">Total Jumlah</div>
                                 </div>
                                 <div class="summary-card">
-                                    <div class="summary-value">Rp {{ number_format($barangMasuk->detailBarangMasuk->sum('total'), 0, ',', '.') }}</div>
+                                    <div class="summary-value">Rp
+                                        {{ number_format($barangMasuk->detailBarangMasuk->sum('total'), 0, ',', '.') }}
+                                    </div>
                                     <div class="summary-label">Grand Total</div>
                                 </div>
                             </div>
                         </div>
+
+                        @if ($barangMasuk->isCancelled())
+                            <div class="alert alert-danger mt-3">
+                                <strong>Alasan Cancel:</strong> {{ $barangMasuk->cancel_reason }}<br>
+                                <strong>Dicancel Oleh:</strong> {{ $barangMasuk->cancelledBy->name ?? '-' }}<br>
+                                <strong>Waktu Cancel:</strong>
+                                {{ optional($barangMasuk->cancelled_at)->format('d F Y, H:i:s') ?? '-' }}
+                            </div>
+                        @endif
 
                         <!-- Detail Barang -->
                         <div class="mt-4">
@@ -227,40 +265,47 @@
                                     </thead>
                                     <tbody>
                                         @forelse($barangMasuk->detailBarangMasuk as $index => $detail)
-                                        <tr>
-                                            <td class="text-center">{{ $index + 1 }}</td>
-                                            <td>{{ $detail->barang->kode ?? '-' }}</td>
-                                            <td>{{ $detail->barang->nama ?? '-' }}</td>
-                                            <td class="text-center">
-                                                <span class="ppn-badge {{ strtolower($detail->stok_ppn) === 'ppn' ? 'ppn' : 'non-ppn' }}">
-                                                    {{ $detail->stok_ppn }}
-                                                </span>
-                                            </td>
-                                            <td class="text-center">{{ $detail->satuan->nama ?? '-' }}</td>
-                                            <td class="text-center">{{ number_format($detail->isi) }}</td>
-                                            <td class="text-center">{{ number_format($detail->jumlah) }}</td>
-                                            <td class="text-right">Rp {{ number_format($detail->harga_beli, 0, ',', '.') }}</td>
-                                            <td class="text-right">Rp {{ number_format($detail->total, 0, ',', '.') }}</td>
-                                            <td>{{ $detail->keterangan ?: '-' }}</td>
-                                        </tr>
+                                            <tr>
+                                                <td class="text-center">{{ $index + 1 }}</td>
+                                                <td>{{ $detail->barang->kode ?? '-' }}</td>
+                                                <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
+                                                <td class="text-center">
+                                                    <span
+                                                        class="ppn-badge {{ strtolower($detail->stok_ppn) === 'ppn' ? 'ppn' : 'non-ppn' }}">
+                                                        {{ $detail->stok_ppn }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-center">{{ $detail->satuan->nama ?? '-' }}</td>
+                                                <td class="text-center">{{ number_format($detail->isi) }}</td>
+                                                <td class="text-center">{{ number_format($detail->jumlah) }}</td>
+                                                <td class="text-right">Rp
+                                                    {{ number_format($detail->harga_beli, 0, ',', '.') }}</td>
+                                                <td class="text-right">Rp {{ number_format($detail->total, 0, ',', '.') }}
+                                                </td>
+                                                <td>{{ $detail->keterangan ?: '-' }}</td>
+                                            </tr>
                                         @empty
-                                        <tr>
-                                            <td colspan="10" class="text-center py-4">
-                                                <em class="text-muted">Tidak ada detail barang</em>
-                                            </td>
-                                        </tr>
+                                            <tr>
+                                                <td colspan="10" class="text-center py-4">
+                                                    <em class="text-muted">Tidak ada detail barang</em>
+                                                </td>
+                                            </tr>
                                         @endforelse
                                     </tbody>
-                                    @if($barangMasuk->detailBarangMasuk->count() > 0)
-                                    <tfoot>
-                                        <tr class="table-info">
-                                            <th colspan="6" class="text-right">TOTAL:</th>
-                                            <th class="text-center">{{ number_format($barangMasuk->detailBarangMasuk->sum('jumlah')) }}</th>
-                                            <th></th>
-                                            <th class="text-right">Rp {{ number_format($barangMasuk->detailBarangMasuk->sum('total'), 0, ',', '.') }}</th>
-                                            <th></th>
-                                        </tr>
-                                    </tfoot>
+                                    @if ($barangMasuk->detailBarangMasuk->count() > 0)
+                                        <tfoot>
+                                            <tr class="table-info">
+                                                <th colspan="6" class="text-right">TOTAL:</th>
+                                                <th class="text-center">
+                                                    {{ number_format($barangMasuk->detailBarangMasuk->sum('jumlah')) }}
+                                                </th>
+                                                <th></th>
+                                                <th class="text-right">Rp
+                                                    {{ number_format($barangMasuk->detailBarangMasuk->sum('total'), 0, ',', '.') }}
+                                                </th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
                                     @endif
                                 </table>
                             </div>
@@ -277,14 +322,16 @@
                                             <div class="info-value">{{ $barangMasuk->createdBy->name ?? '-' }}</div>
 
                                             <div class="info-label">Tanggal Dibuat</div>
-                                            <div class="info-value">{{ $barangMasuk->created_at->format('d F Y, H:i:s') }}</div>
+                                            <div class="info-value">{{ $barangMasuk->created_at->format('d F Y, H:i:s') }}
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="info-label">Diperbarui Oleh</div>
                                             <div class="info-value">{{ $barangMasuk->updatedBy->name ?? '-' }}</div>
 
                                             <div class="info-label">Tanggal Diperbarui</div>
-                                            <div class="info-value">{{ $barangMasuk->updated_at->format('d F Y, H:i:s') }}</div>
+                                            <div class="info-value">{{ $barangMasuk->updated_at->format('d F Y, H:i:s') }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -296,9 +343,17 @@
                             <a href="{{ route('barangmasuk.index') }}" class="btn-back mr-3">
                                 <i class="feather icon-arrow-left mr-2"></i> Kembali ke Daftar
                             </a>
-                            <a href="{{ route('barangmasuk.edit', $barangMasuk->id) }}" class="btn btn-warning">
-                                <i class="feather icon-edit mr-2"></i> Edit Data
-                            </a>
+                            @if ($barangMasuk->canBeEdited())
+                                {{--
+                                <a href="{{ route('barangmasuk.edit', $barangMasuk->id) }}" class="btn btn-warning mr-2">
+                                    <i class="feather icon-edit mr-2"></i> Edit Data
+                                </a>
+                                --}}
+                                <button type="button" class="btn btn-danger" id="btn-cancel-barang-masuk"
+                                    data-id="{{ $barangMasuk->id }}" data-no-reff="{{ $barangMasuk->no_reff }}">
+                                    <i class="feather icon-x-circle mr-2"></i> Cancel Transaksi
+                                </button>
+                            @endif
                         </div>
 
                     </div>
@@ -311,8 +366,56 @@
 @section('js')
     <script>
         $(document).ready(function() {
-            // Add any JavaScript functionality if needed
-            console.log('Detail barang masuk loaded');
+            $('#btn-cancel-barang-masuk').on('click', function() {
+                const id = $(this).data('id');
+                const noReff = $(this).data('no-reff');
+
+                Swal.fire({
+                    title: `Cancel Barang Masuk ${noReff}`,
+                    input: 'textarea',
+                    inputLabel: 'Alasan cancel',
+                    inputPlaceholder: 'Masukkan alasan cancel transaksi ini',
+                    inputValidator: (value) => {
+                        if (!value || !value.trim()) {
+                            return 'Alasan cancel wajib diisi';
+                        }
+                    },
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Cancel!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    $.ajax({
+                        url: `/barang-masuk/${id}/cancel`,
+                        method: 'POST',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            cancel_reason: result.value.trim()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire('Berhasil!', response.message, 'success')
+                                    .then(() => {
+                                        window.location.reload();
+                                    });
+                            } else {
+                                Swal.fire('Error!', response.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            const message = xhr.responseJSON?.message ||
+                                'Terjadi kesalahan saat cancel data';
+                            Swal.fire('Error!', message, 'error');
+                        }
+                    });
+                });
+            });
         });
     </script>
 @endsection

@@ -70,7 +70,7 @@ class BarangMasukController extends Controller
 
         if ($request->ajax()) {
 
-            $data = BarangMasuk::with(['jenisStok', 'detailBarangMasuk'])->orderBy('created_at', 'desc')->get();
+            $data = BarangMasuk::with(['jenisStok', 'detailBarangMasuk', 'cancelledBy'])->orderBy('created_at', 'desc')->get();
 
 
             return DataTables::of($data)
@@ -87,6 +87,15 @@ class BarangMasukController extends Controller
                 ->addColumn('total', function ($row) {
                     return 'Rp ' . number_format($row->detailBarangMasuk->sum('total'), 0, ',', '.');
                 })
+                ->addColumn('status', function ($row) {
+                    if ($row->isCancelled()) {
+                        $reason = $row->cancel_reason ? '<br><small>' . e(Str::limit($row->cancel_reason, 40)) . '</small>' : '';
+
+                        return '<span class="badge badge-danger">Cancelled</span>' . $reason;
+                    }
+
+                    return '<span class="badge badge-success">Success</span>';
+                })
                 ->addColumn('catatan', function ($row) {
                     return $row->catatan ? Str::limit($row->catatan, 50) : '-';
                 })
@@ -98,20 +107,24 @@ class BarangMasukController extends Controller
                                 <i class="ft-eye"></i>
                              </button>';
 
-                    // Edit button
-                    $btn .= '<button class="btn btn-sm btn-warning btn-barangmasuk-edit" data-id="' . $row->id . '" title="Edit">
-                                <i class="ft-edit"></i>
-                             </button>';
+                          /*
+                          if ($row->canBeEdited()) {
+                                $btn .= '<button class="btn btn-sm btn-warning btn-barangmasuk-edit" data-id="' . $row->id . '" title="Edit">
+                                                <i class="ft-edit"></i>
+                                            </button>';
+                          }
+                          */
 
-                    // Delete button
-                    $btn .= '<button class="btn btn-sm btn-danger btn-barangmasuk-delete" data-id="' . $row->id . '" title="Hapus">
-                                <i class="ft-trash"></i>
-                             </button>';
+                    if ($row->canBeCancelled()) {
+                        $btn .= '<button class="btn btn-sm btn-danger btn-barangmasuk-cancel" data-id="' . $row->id . '" data-no-reff="' . e($row->no_reff) . '" title="Cancel Transaksi">
+                                    <i class="ft-x-circle"></i>
+                                 </button>';
+                    }
 
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['status', 'action'])
                 ->make(true);
         }
 
@@ -167,6 +180,7 @@ class BarangMasukController extends Controller
                 'no_reff' => $request->no_reff,
                 'tanggal_masuk' => $request->tanggal,
                 'jenis_stok_id' => $request->jenis_stok_id,
+                'status' => BarangMasuk::STATUS_SUCCESS,
                 'catatan' => $request->catatan,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
@@ -250,7 +264,8 @@ class BarangMasukController extends Controller
                 'detailBarangMasuk.satuan',
                 'jenisStok',
                 'createdBy',
-                'updatedBy'
+                'updatedBy',
+                'cancelledBy'
             ])->findOrFail($id);
 
             if (request()->ajax()) {
@@ -261,7 +276,14 @@ class BarangMasukController extends Controller
                         'no_reff' => $barangMasuk->no_reff,
                         'tanggal_masuk' => $barangMasuk->tanggal_masuk->format('d-m-Y'),
                         'jenis_stok' => $barangMasuk->jenisStok->nama ?? '-',
+                        'status' => $barangMasuk->status,
+                        'status_label' => $barangMasuk->isCancelled() ? 'Cancelled' : 'Success',
                         'catatan' => $barangMasuk->catatan ?? '-',
+                        'cancel_reason' => $barangMasuk->cancel_reason ?? '-',
+                        'cancelled_by' => $barangMasuk->cancelledBy->name ?? '-',
+                        'cancelled_at' => $barangMasuk->cancelled_at?->format('d-m-Y H:i:s') ?? '-',
+                        'can_edit' => $barangMasuk->canBeEdited(),
+                        'can_cancel' => $barangMasuk->canBeCancelled(),
                         'created_by' => $barangMasuk->createdBy->name ?? '-',
                         'updated_by' => $barangMasuk->updatedBy->name ?? '-',
                         'created_at' => $barangMasuk->created_at->format('d-m-Y H:i:s'),
@@ -270,7 +292,7 @@ class BarangMasukController extends Controller
                             return [
                                 'id' => $detail->id,
                                 'kode_barang' => $detail->barang->kode ?? '-',
-                                'nama_barang' => $detail->barang->nama ?? '-',
+                                'nama_barang' => $detail->barang->nama_barang ?? '-',
                                 'stok_ppn' => $detail->stok_ppn,
                                 'satuan' => $detail->satuan->nama ?? '-',
                                 'isi' => $detail->isi,
@@ -313,6 +335,11 @@ class BarangMasukController extends Controller
 
             $barangMasuk = BarangMasuk::with(['detailBarangMasuk.barang', 'detailBarangMasuk.satuan'])
                 ->findOrFail($id);
+
+            if ($barangMasuk->isCancelled()) {
+                return redirect()->route('barangmasuk.show', $barangMasuk->id)
+                    ->with('error', 'Data barang masuk yang sudah dicancel tidak dapat diedit');
+            }
 
             $jenisStoks = JenisStok::all();
             $satuans = Satuan::all();
@@ -364,6 +391,10 @@ class BarangMasukController extends Controller
             DB::beginTransaction();
 
             $barangMasuk = BarangMasuk::findOrFail($id);
+
+            if ($barangMasuk->isCancelled()) {
+                throw new \Exception('Data barang masuk yang sudah dicancel tidak dapat diperbarui');
+            }
 
             $barangMasuk->update([
                 'no_reff' => $request->no_reff,
@@ -440,6 +471,63 @@ class BarangMasukController extends Controller
                 'success' => false,
                 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
                 'error_type' => 'server_error'
+            ], 500);
+        }
+    }
+
+    public function cancel(Request $request, string $id)
+    {
+        try {
+            $validated = $request->validate([
+                'cancel_reason' => 'required|string|max:1000',
+            ], [
+                'cancel_reason.required' => 'Alasan cancel wajib diisi',
+            ]);
+
+            DB::beginTransaction();
+
+            $barangMasuk = BarangMasuk::findOrFail($id);
+
+            if ($barangMasuk->isCancelled()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data barang masuk ini sudah dicancel sebelumnya'
+                ], 422);
+            }
+
+            $barangMasuk->update([
+                'status' => BarangMasuk::STATUS_CANCELLED,
+                'cancel_reason' => $validated['cancel_reason'],
+                'cancelled_at' => now(),
+                'cancelled_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Barang masuk berhasil dicancel dan tidak lagi dihitung sebagai stok masuk'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Data yang dimasukkan tidak valid',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error cancelling Barang Masuk: ' . $e->getMessage(), [
+                'id' => $id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat cancel data: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -37,6 +37,13 @@ class DetailBarangMasuk extends Model
         return $this->belongsTo(BarangMasuk::class, 'barang_masuk_id');
     }
 
+    public function scopeActiveStock($query)
+    {
+        return $query->whereHas('barangMasuk', function ($barangMasukQuery) {
+            $barangMasukQuery->successful();
+        });
+    }
+
     public function barang()
     {
         return $this->belongsTo(Barang::class, 'barang_id');

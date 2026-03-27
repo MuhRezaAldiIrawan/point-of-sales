@@ -17,7 +17,8 @@
         }
 
         /* Table styling in modal */
-        .table-sm th, .table-sm td {
+        .table-sm th,
+        .table-sm td {
             padding: 0.5rem;
             font-size: 0.875rem;
         }
@@ -34,7 +35,8 @@
                 margin: 1% !important;
             }
 
-            .table-sm th, .table-sm td {
+            .table-sm th,
+            .table-sm td {
                 padding: 0.25rem;
                 font-size: 0.75rem;
             }
@@ -49,7 +51,8 @@
                     <div class="card-header">
                         <h4 class="card-title">Daftar {{ $title }}</h4>
                         <div class="heading-elements">
-                            <a href="{{ route('barangmasuk.create') }}" class="btn btn-primary btn-md d-flex align-items-center">
+                            <a href="{{ route('barangmasuk.create') }}"
+                                class="btn btn-primary btn-md d-flex align-items-center">
                                 <i class="la la-plus mr-1"></i> Tambah {{ $title }}
                             </a>
                         </div>
@@ -67,6 +70,7 @@
                                         <th class="text-center">Jenis Stok</th>
                                         <th class="text-center">Jumlah</th>
                                         <th class="text-center">Total</th>
+                                        <th class="text-center">Status</th>
                                         <th class="text-center">Catatan</th>
                                         <th class="text-center">Action</th>
                                     </tr>
@@ -79,7 +83,6 @@
             </div>
         </div>
     </section>
-
 @endsection
 
 @section('js')
@@ -120,6 +123,10 @@
                     {
                         data: 'total',
                         name: 'total'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
                     },
                     {
                         data: 'catatan',
@@ -194,9 +201,9 @@
                             let detailItemsHtml = '';
                             if (data.details.length > 0) {
                                 data.details.forEach(function(detail, index) {
-                                    const ppnBadge = detail.stok_ppn === 'PPN'
-                                        ? '<span class="badge badge-success">PPN</span>'
-                                        : '<span class="badge badge-secondary">Non PPN</span>';
+                                    const ppnBadge = detail.stok_ppn === 'PPN' ?
+                                        '<span class="badge badge-success">PPN</span>' :
+                                        '<span class="badge badge-secondary">Non PPN</span>';
 
                                     detailItemsHtml += `
                                         <tr>
@@ -214,7 +221,8 @@
                                     `;
                                 });
                             } else {
-                                detailItemsHtml = '<tr><td colspan="10" class="text-center text-muted">Tidak ada detail barang</td></tr>';
+                                detailItemsHtml =
+                                    '<tr><td colspan="10" class="text-center text-muted">Tidak ada detail barang</td></tr>';
                             }
 
                             // Show detail modal
@@ -226,6 +234,7 @@
                                             <div class="col-md-6">
                                                 <strong>📅 Tanggal:</strong> ${data.tanggal_masuk}<br>
                                                 <strong>📦 Jenis Stok:</strong> ${data.jenis_stok}<br>
+                                                <strong>🏷️ Status:</strong> ${data.status_label}<br>
                                                 <strong>📝 Catatan:</strong> ${data.catatan}
                                             </div>
                                             <div class="col-md-6">
@@ -234,6 +243,14 @@
                                                 <strong>💰 Grand Total:</strong> Rp ${parseInt(data.grand_total).toLocaleString('id-ID')}
                                             </div>
                                         </div>
+
+                                        ${data.status === 'cancelled' ? `
+                                                    <div class="alert alert-danger text-left mb-3">
+                                                        <strong>Alasan Cancel:</strong> ${data.cancel_reason}<br>
+                                                        <strong>Dicancel Oleh:</strong> ${data.cancelled_by}<br>
+                                                        <strong>Waktu Cancel:</strong> ${data.cancelled_at}
+                                                    </div>
+                                                ` : ''}
 
                                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                             <table class="table table-striped table-bordered table-sm">
@@ -255,16 +272,16 @@
                                                     ${detailItemsHtml}
                                                 </tbody>
                                                 ${data.details.length > 0 ? `
-                                                    <tfoot>
-                                                        <tr class="table-info">
-                                                            <th colspan="6" class="text-right">TOTAL:</th>
-                                                            <th class="text-center">${parseInt(data.total_jumlah).toLocaleString('id-ID')}</th>
-                                                            <th></th>
-                                                            <th class="text-right">Rp ${parseInt(data.grand_total).toLocaleString('id-ID')}</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </tfoot>
-                                                ` : ''}
+                                                            <tfoot>
+                                                                <tr class="table-info">
+                                                                    <th colspan="6" class="text-right">TOTAL:</th>
+                                                                    <th class="text-center">${parseInt(data.total_jumlah).toLocaleString('id-ID')}</th>
+                                                                    <th></th>
+                                                                    <th class="text-right">Rp ${parseInt(data.grand_total).toLocaleString('id-ID')}</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </tfoot>
+                                                        ` : ''}
                                             </table>
                                         </div>
 
@@ -278,9 +295,12 @@
                                 width: '90%',
                                 confirmButtonText: '✅ Tutup',
                                 confirmButtonColor: '#007bff',
-                                showCancelButton: true,
-                                cancelButtonText: '📝 Edit',
-                                cancelButtonColor: '#ffc107',
+                                // showCancelButton: data.can_edit,
+                                // cancelButtonText: '📝 Edit',
+                                // cancelButtonColor: '#ffc107',
+                                showDenyButton: data.can_cancel,
+                                denyButtonText: '🚫 Cancel',
+                                denyButtonColor: '#dc3545',
                                 reverseButtons: true,
                                 customClass: {
                                     popup: 'swal-wide',
@@ -288,12 +308,16 @@
                                 }
                             }).then((result) => {
                                 if (result.dismiss === Swal.DismissReason.cancel) {
-                                    // Redirect to edit page
                                     window.location.href = `/barang-masuk/${id}/edit`;
+                                }
+
+                                if (result.isDenied) {
+                                    promptCancelBarangMasuk(id, data.no_reff);
                                 }
                             });
                         } else {
-                            Swal.fire('❌ Error', response.message || 'Gagal memuat detail', 'error');
+                            Swal.fire('❌ Error', response.message || 'Gagal memuat detail',
+                                'error');
                         }
                     },
                     error: function(xhr) {
@@ -317,43 +341,61 @@
                 window.location.href = `/barang-masuk/${id}/edit`;
             });
 
-            // Handle delete button click
-            $('#barangmasuk-table').on('click', '.btn-barangmasuk-delete', function() {
+            $('#barangmasuk-table').on('click', '.btn-barangmasuk-cancel', function() {
                 var id = $(this).data('id');
+                var noReff = $(this).data('no-reff');
 
+                promptCancelBarangMasuk(id, noReff);
+            });
+
+            function promptCancelBarangMasuk(id, noReff) {
                 Swal.fire({
-                    title: 'Konfirmasi Hapus',
-                    text: 'Yakin ingin menghapus data barang masuk ini?',
+                    title: `Cancel Barang Masuk ${noReff}`,
+                    input: 'textarea',
+                    inputLabel: 'Alasan cancel',
+                    inputPlaceholder: 'Masukkan alasan cancel transaksi ini',
+                    inputAttributes: {
+                        'aria-label': 'Masukkan alasan cancel'
+                    },
+                    inputValidator: (value) => {
+                        if (!value || !value.trim()) {
+                            return 'Alasan cancel wajib diisi';
+                        }
+                    },
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, Hapus!',
+                    confirmButtonText: 'Ya, Cancel!',
                     cancelButtonText: 'Batal'
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        // AJAX call untuk delete
-                        $.ajax({
-                            url: `/barang-masuk/${id}`,
-                            method: 'DELETE',
-                            data: {
-                                _token: $('meta[name="csrf-token"]').attr('content')
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    Swal.fire('Berhasil!', response.message, 'success');
-                                    table.ajax.reload();
-                                } else {
-                                    Swal.fire('Error!', response.message, 'error');
-                                }
-                            },
-                            error: function() {
-                                Swal.fire('Error!', 'Terjadi kesalahan saat menghapus data', 'error');
-                            }
-                        });
+                    if (!result.isConfirmed) {
+                        return;
                     }
+
+                    $.ajax({
+                        url: `/barang-masuk/${id}/cancel`,
+                        method: 'POST',
+                        data: {
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            cancel_reason: result.value.trim()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire('Berhasil!', response.message, 'success');
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire('Error!', response.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            const message = xhr.responseJSON?.message ||
+                                'Terjadi kesalahan saat cancel data';
+                            Swal.fire('Error!', message, 'error');
+                        }
+                    });
                 });
-            });
+            }
         });
     </script>
 @endsection

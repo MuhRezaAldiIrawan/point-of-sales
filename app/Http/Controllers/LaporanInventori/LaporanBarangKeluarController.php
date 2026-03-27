@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Models\BarangKeluar;
-use App\Models\DetailBarangKeluar;
 use Carbon\Carbon;
 
 class LaporanBarangKeluarController extends Controller
@@ -29,7 +28,7 @@ class LaporanBarangKeluarController extends Controller
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
 
-        $query = BarangKeluar::with(['jenisStok', 'detailBarangKeluar.barang', 'detailBarangKeluar.satuan', 'createdBy']);
+        $query = BarangKeluar::with(['jenisStok', 'detailBarangKeluar.barang', 'detailBarangKeluar.satuan', 'createdBy', 'cancelledBy']);
 
         // Filter berdasarkan tanggal jika disediakan
         if ($startDate && $endDate) {
@@ -53,12 +52,26 @@ class LaporanBarangKeluarController extends Controller
             ->addColumn('total_nilai', function ($row) {
                 return 'Rp ' . number_format($row->detailBarangKeluar->sum('total'), 0, ',', '.');
             })
+            ->addColumn('status_badge', function ($row) {
+                if ($row->isCancelled()) {
+                    return '<span class="badge badge-danger">Cancelled</span>';
+                }
+
+                return '<span class="badge badge-success">Success</span>';
+            })
+            ->addColumn('cancel_reason_display', function ($row) {
+                if (! $row->isCancelled()) {
+                    return '-';
+                }
+
+                return $row->cancel_reason ?: '-';
+            })
             ->addColumn('created_by_name', function ($row) {
                 return $row->createdBy->name ?? '-';
             })
             ->addColumn('detail_items', function ($row) {
                 $details = $row->detailBarangKeluar->map(function ($detail) {
-                    return $detail->barang->nama_barang . ' (' . $detail->jumlah . ' ' . ($detail->satuan->nama ?? '') . ')';
+                    return ($detail->barang->nama_barang ?? '-') . ' (' . $detail->jumlah . ' ' . ($detail->satuan->nama ?? '') . ')';
                 })->implode(', ');
 
                 return $details ?: '-';
@@ -68,7 +81,7 @@ class LaporanBarangKeluarController extends Controller
                             <i class="fa fa-eye"></i> Detail
                         </button>';
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['status_badge', 'action'])
             ->make(true);
     }
 
@@ -77,7 +90,7 @@ class LaporanBarangKeluarController extends Controller
      */
     public function detail($id)
     {
-        $barangKeluar = BarangKeluar::with(['jenisStok', 'detailBarangKeluar.barang', 'detailBarangKeluar.satuan', 'createdBy'])->findOrFail($id);
+        $barangKeluar = BarangKeluar::with(['jenisStok', 'detailBarangKeluar.barang', 'detailBarangKeluar.satuan', 'createdBy', 'cancelledBy'])->findOrFail($id);
 
         return response()->json([
             'success' => true,

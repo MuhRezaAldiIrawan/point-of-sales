@@ -9,11 +9,18 @@ class BarangMasuk extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_SUCCESS = 'success';
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $fillable = [
         'no_reff',
         'tanggal_masuk',
         'jenis_stok_id',
+        'status',
         'catatan',
+        'cancel_reason',
+        'cancelled_at',
+        'cancelled_by',
         'created_by',
         'updated_by',
     ];
@@ -22,7 +29,28 @@ class BarangMasuk extends Model
 
     protected $casts = [
         'tanggal_masuk' => 'date',
+        'cancelled_at' => 'datetime',
     ];
+
+    public function scopeSuccessful($query)
+    {
+        return $query->where('status', self::STATUS_SUCCESS);
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    public function canBeEdited(): bool
+    {
+        return ! $this->isCancelled();
+    }
+
+    public function canBeCancelled(): bool
+    {
+        return ! $this->isCancelled();
+    }
 
     public function jenisStok()
     {
@@ -42,6 +70,11 @@ class BarangMasuk extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function barang()

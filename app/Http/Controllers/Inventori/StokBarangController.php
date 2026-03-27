@@ -8,7 +8,6 @@ use Yajra\DataTables\DataTables;
 use App\Models\Barang;
 use App\Models\DetailBarangMasuk;
 use App\Models\DetailBarangKeluar;
-use Illuminate\Support\Facades\DB;
 
 class StokBarangController extends Controller
 {
@@ -24,8 +23,8 @@ class StokBarangController extends Controller
             $stokData = [];
 
             foreach ($barangs as $barang) {
-                $qtyMasuk = DetailBarangMasuk::where('barang_id', $barang->id)->sum('jumlah');
-                $qtyKeluar = DetailBarangKeluar::where('barang_id', $barang->id)->sum('jumlah');
+                $qtyMasuk = DetailBarangMasuk::activeStock()->where('barang_id', $barang->id)->sum('jumlah');
+                $qtyKeluar = DetailBarangKeluar::activeStock()->where('barang_id', $barang->id)->sum('jumlah');
                 $qtyStok = $qtyMasuk - $qtyKeluar;
 
                 // Apply filter
@@ -33,7 +32,7 @@ class StokBarangController extends Controller
                     continue; // Skip items that don't match the filter
                 }
 
-                $lastDetailMasuk = DetailBarangMasuk::where('barang_id', $barang->id)->latest()->first();
+                $lastDetailMasuk = DetailBarangMasuk::activeStock()->where('barang_id', $barang->id)->latest()->first();
                 $ppnStatus = $lastDetailMasuk ? $lastDetailMasuk->stok_ppn : 'Non PPN';
 
                 $stokData[] = [

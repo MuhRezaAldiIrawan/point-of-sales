@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Models\DetailBarangMasuk;
-use App\Models\BarangMasuk;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -33,6 +32,7 @@ class DetailBarangMasukController extends Controller
         $query = DetailBarangMasuk::with([
             'barangMasuk.jenisStok',
             'barangMasuk.createdBy',
+            'barangMasuk.cancelledBy',
             'barang',
             'satuan',
             'createdBy'
@@ -68,15 +68,29 @@ class DetailBarangMasukController extends Controller
             ->addColumn('total_formatted', function ($row) {
                 return 'Rp ' . number_format($row->total, 0, ',', '.');
             })
+            ->addColumn('status_badge', function ($row) {
+                if ($row->barangMasuk?->isCancelled()) {
+                    return '<span class="badge badge-danger">Cancelled</span>';
+                }
+
+                return '<span class="badge badge-success">Success</span>';
+            })
+            ->addColumn('cancel_reason_display', function ($row) {
+                if (! $row->barangMasuk?->isCancelled()) {
+                    return '-';
+                }
+
+                return $row->barangMasuk->cancel_reason ?: '-';
+            })
             ->addColumn('created_by_name', function ($row) {
-                return $row->createdBy->name ?? '-';
+                return $row->createdBy->name ?? $row->barangMasuk->createdBy->name ?? '-';
             })
             ->addColumn('action', function ($row) {
                 return '<button class="btn btn-sm btn-info" onclick="showDetail(' . $row->id . ')">
                             <i class="fa fa-eye"></i> Detail
                         </button>';
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['status_badge', 'action'])
             ->make(true);
     }
 
@@ -89,6 +103,7 @@ class DetailBarangMasukController extends Controller
             $detailBarangMasuk = DetailBarangMasuk::with([
                 'barangMasuk.jenisStok',
                 'barangMasuk.createdBy',
+                'barangMasuk.cancelledBy',
                 'barang',
                 'satuan',
                 'createdBy'

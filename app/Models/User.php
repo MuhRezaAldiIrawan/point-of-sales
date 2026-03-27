@@ -77,6 +77,20 @@ class User extends Authenticatable
         ];
     }
 
+    public function getNameAttribute(): string
+    {
+        $fullName = trim(implode(' ', array_filter([
+            $this->nama_depan,
+            $this->nama_belakang,
+        ])));
+
+        if ($fullName !== '') {
+            return $fullName;
+        }
+
+        return $this->email ?: ($this->nip ?: 'System');
+    }
+
     /**
      * Get the jabatan that owns the user.
      */

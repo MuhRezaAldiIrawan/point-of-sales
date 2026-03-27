@@ -8,7 +8,6 @@ use Yajra\DataTables\DataTables;
 use App\Models\Barang;
 use App\Models\DetailBarangMasuk;
 use App\Models\DetailBarangKeluar;
-use Illuminate\Support\Facades\DB;
 
 class StokMinimController extends Controller
 {
@@ -25,13 +24,13 @@ class StokMinimController extends Controller
             $stokData = [];
 
             foreach ($barangs as $barang) {
-                $qtyMasuk = DetailBarangMasuk::where('barang_id', $barang->id)->sum('jumlah');
-                $qtyKeluar = DetailBarangKeluar::where('barang_id', $barang->id)->sum('jumlah');
+                $qtyMasuk = DetailBarangMasuk::activeStock()->where('barang_id', $barang->id)->sum('jumlah');
+                $qtyKeluar = DetailBarangKeluar::activeStock()->where('barang_id', $barang->id)->sum('jumlah');
                 $qtyStok = $qtyMasuk - $qtyKeluar;
 
                 // Filter hanya stok yang <= 10
                 if ($qtyStok <= 10) {
-                    $lastDetailMasuk = DetailBarangMasuk::where('barang_id', $barang->id)->latest()->first();
+                    $lastDetailMasuk = DetailBarangMasuk::activeStock()->where('barang_id', $barang->id)->latest()->first();
                     $ppnStatus = $lastDetailMasuk ? ($lastDetailMasuk->stok_ppn ?? 'Non PPN') : 'Non PPN';
 
                     $stokData[] = [

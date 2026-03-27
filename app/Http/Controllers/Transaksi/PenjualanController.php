@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Transaksi;
 use App\Http\Controllers\Controller;
 use App\Models\Barang;
 use App\Models\BarangKeluar;
+use App\Models\BarangMasuk;
 use App\Models\DetailBarangKeluar;
 use App\Models\DetailPenjualan;
 use App\Models\Pelanggan;
@@ -314,6 +315,7 @@ class PenjualanController extends Controller
                 ->where('detail_barang_masuks.barang_id', $detail->barang_id)
                 ->whereNull('detail_barang_masuks.deleted_at')
                 ->whereNull('barang_masuks.deleted_at')
+                ->where('barang_masuks.status', BarangMasuk::STATUS_SUCCESS)
                 ->sum('detail_barang_masuks.jumlah');
 
             $stokKeluar = (float) DB::table('detail_barang_keluars')
@@ -321,6 +323,7 @@ class PenjualanController extends Controller
                 ->where('detail_barang_keluars.barang_id', $detail->barang_id)
                 ->whereNull('detail_barang_keluars.deleted_at')
                 ->whereNull('barang_keluars.deleted_at')
+                ->where('barang_keluars.status', BarangKeluar::STATUS_SUCCESS)
                 ->sum('detail_barang_keluars.jumlah');
 
             // Add back the stock from current transaction
@@ -621,6 +624,7 @@ class PenjualanController extends Controller
                 ->where('detail_barang_masuks.barang_id', $barang->id)
                 ->whereNull('detail_barang_masuks.deleted_at')
                 ->whereNull('barang_masuks.deleted_at')
+                ->where('barang_masuks.status', BarangMasuk::STATUS_SUCCESS)
                 ->sum('detail_barang_masuks.jumlah');
 
             // Calculate stock from barang_keluar (total stock out)
@@ -629,6 +633,7 @@ class PenjualanController extends Controller
                 ->where('detail_barang_keluars.barang_id', $barang->id)
                 ->whereNull('detail_barang_keluars.deleted_at')
                 ->whereNull('barang_keluars.deleted_at')
+                ->where('barang_keluars.status', BarangKeluar::STATUS_SUCCESS)
                 ->sum('detail_barang_keluars.jumlah');
 
             // Calculate remaining stock

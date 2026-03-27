@@ -55,7 +55,7 @@
             border-radius: 8px;
             padding: 1.25rem;
             margin: 0 1.25rem 1.5rem 1.25rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .filter-title {
@@ -94,7 +94,7 @@
 
         .btn-primary:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
         }
 
         .btn-outline-secondary {
@@ -109,6 +109,12 @@
         .btn-outline-secondary:hover {
             background-color: #6c757d;
             transform: translateY(-1px);
+        }
+
+        .reason-text {
+            display: inline-block;
+            max-width: 260px;
+            white-space: normal;
         }
 
         @media (max-width: 768px) {
@@ -187,9 +193,11 @@
                     </div>
                     <div class="filter-section d-flex justify-content-between align-items-center gap-4">
                         <div class="filter-left d-flex align-items-center gap-3">
-                            <label for="daterange" class="mb-0 font-weight-bold text-muted filter-label">Rentang Tanggal:</label>
+                            <label for="daterange" class="mb-0 font-weight-bold text-muted filter-label">Rentang
+                                Tanggal:</label>
                             <div class='input-group'>
-                                <input type='text' id="daterange" class="form-control daterange" placeholder="Pilih Rentang Tanggal" />
+                                <input type='text' id="daterange" class="form-control daterange"
+                                    placeholder="Pilih Rentang Tanggal" />
                                 <div class="input-group-append">
                                     <span class="input-group-text">
                                         <span class="ft-calendar"></span>
@@ -198,7 +206,8 @@
                             </div>
                         </div>
                         <div class="filter-right d-flex align-items-center gap-2">
-                            <button type="button" id="btn-filter" class="btn btn-primary btn-sm" style="margin-right: 10px"
+                            <button type="button" id="btn-filter" class="btn btn-primary btn-sm"
+                                style="margin-right: 10px">
                                 <i class="fa fa-search"></i> Terapkan Filter
                             </button>
                             <button type="button" id="btn-reset" class="btn btn-outline-secondary btn-sm">
@@ -220,6 +229,8 @@
                                         <th>Jenis Stok</th>
                                         <th>Total Item</th>
                                         <th>Total Nilai</th>
+                                        <th>Status</th>
+                                        <th>Alasan Cancel</th>
                                         <th>Dibuat Oleh</th>
                                         <th>Detail Barang</th>
                                         <th>Aksi</th>
@@ -262,7 +273,8 @@
 @section('js')
     <script src="{{ asset('app-assets/vendors/js/tables/datatable/datatables.min.js') }}" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script src="{{ asset('app-assets/vendors/js/pickers/dateTime/moment-with-locales.min.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('app-assets/vendors/js/pickers/dateTime/moment-with-locales.min.js') }}" type="text/javascript">
+    </script>
     <script src="{{ asset('app-assets/vendors/js/pickers/daterange/daterangepicker.js') }}" type="text/javascript"></script>
 
     <script>
@@ -286,7 +298,9 @@
                     toLabel: 'Sampai',
                     customRangeLabel: 'Custom Range',
                     daysOfWeek: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
-                    monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+                    monthNames: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus',
+                        'September', 'Oktober', 'November', 'Desember'
+                    ],
                     firstDay: 1
                 },
                 startDate: moment().startOf('month'),
@@ -300,7 +314,8 @@
 
             // Handle apply event
             $('.daterange').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
+                $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format(
+                    'DD/MM/YYYY'));
             });
 
             // Handle cancel event
@@ -356,6 +371,14 @@
                     {
                         data: 'total_nilai',
                         className: 'text-right'
+                    },
+                    {
+                        data: 'status_badge',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'cancel_reason_display',
+                        className: 'text-center'
                     },
                     {
                         data: 'created_by_name'
@@ -455,12 +478,24 @@
                                     <td>${data.jenis_stok ? data.jenis_stok.nama : '-'}</td>
                                 </tr>
                                 <tr>
+                                    <th>Status:</th>
+                                    <td>${data.status === 'cancelled' ? '<span class="badge badge-danger">Cancelled</span>' : '<span class="badge badge-success">Success</span>'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Alasan Cancel:</th>
+                                    <td>${data.cancel_reason || '-'}</td>
+                                </tr>
+                                <tr>
                                     <th>Catatan:</th>
                                     <td>${data.catatan || '-'}</td>
                                 </tr>
                                 <tr>
                                     <th>Dibuat Oleh:</th>
                                     <td>${data.created_by ? data.created_by.name : '-'}</td>
+                                </tr>
+                                <tr>
+                                    <th>Dicancel Oleh:</th>
+                                    <td>${data.cancelled_by ? data.cancelled_by.name : '-'}</td>
                                 </tr>
                             </table>
                         </div>

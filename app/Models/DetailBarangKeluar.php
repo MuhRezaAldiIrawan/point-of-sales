@@ -37,6 +37,13 @@ class DetailBarangKeluar extends Model
         return $this->belongsTo(BarangKeluar::class, 'barang_keluar_id');
     }
 
+    public function scopeActiveStock($query)
+    {
+        return $query->whereHas('barangKeluar', function ($barangKeluarQuery) {
+            $barangKeluarQuery->successful();
+        });
+    }
+
     public function barang()
     {
         return $this->belongsTo(Barang::class, 'barang_id');

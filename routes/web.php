@@ -63,6 +63,7 @@ Route::controller(BarangMasukController::class)->group(function () {
     Route::get('/barang-masuk/create', 'create')->name('barangmasuk.create');
     Route::get('/barang-masuk/get-barangs', 'getBarangs')->name('barangmasuk.getBarangs');
     Route::post('/barang-masuk', 'store')->name('barangmasuk.store');
+    Route::post('/barang-masuk/{id}/cancel', 'cancel')->name('barangmasuk.cancel');
     Route::get('/barang-masuk/{id}', 'show')->name('barangmasuk.show');
     Route::get('/barang-masuk/{id}/edit', 'edit')->name('barangmasuk.edit');
     Route::put('/barang-masuk/{id}', 'update')->name('barangmasuk.update');
@@ -73,7 +74,9 @@ Route::controller(BarangMasukController::class)->group(function () {
 Route::controller(BarangKeluarController::class)->group(function () {
     Route::get('/barangkeluar', 'index')->name('barangkeluar.index');
     Route::get('/barangkeluar/create', 'create')->name('barangkeluar.create');
+    Route::get('/barangkeluar/get-barangs', 'getBarangs')->name('barangkeluar.getBarangs');
     Route::post('/barangkeluar', 'store')->name('barangkeluar.store');
+    Route::post('/barangkeluar/{id}/cancel', 'cancel')->name('barangkeluar.cancel');
     Route::get('/barangkeluar/{id}', 'show')->name('barangkeluar.show');
     Route::get('/barangkeluar/{id}/edit', 'edit')->name('barangkeluar.edit');
     Route::put('/barangkeluar/{id}', 'update')->name('barangkeluar.update');

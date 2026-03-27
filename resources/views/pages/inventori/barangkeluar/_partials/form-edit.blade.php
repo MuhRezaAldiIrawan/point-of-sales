@@ -301,7 +301,8 @@
                             </div>
                         @endif
 
-                        <form id="barangKeluarEditForm" method="POST" action="{{ route('barangkeluar.update', $barangKeluar->id) }}">
+                        <form id="barangKeluarEditForm" method="POST"
+                            action="{{ route('barangkeluar.update', $barangKeluar->id) }}">
                             @csrf
                             @method('PUT')
 
@@ -342,7 +343,8 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <button type="button" class="btn btn-add" data-toggle="modal" data-target="#modalJenisStok">
+                                            <button type="button" class="btn btn-add" data-toggle="modal"
+                                                data-target="#modalJenisStok">
                                                 <i class="ft-plus"></i>
                                             </button>
                                         </div>
@@ -376,23 +378,11 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label>Kode</label>
-                                            <input type="text" class="form-control form-control-sm" id="kode_barang"
-                                                placeholder="">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Cari Nama / Kode Barang</label>
                                             <select class="form-control form-control-sm" id="barang_id">
-                                                <option value="">-- Pilih Barang --</option>
-                                                @foreach ($barangs as $barang)
-                                                    <option value="{{ $barang->id }}" data-kode="{{ $barang->kode }}">
-                                                        {{ $barang->nama_barang }}
-                                                    </option>
-                                                @endforeach
+                                                <option value=""></option>
                                             </select>
                                         </div>
                                     </div>
@@ -407,7 +397,8 @@
                                     <div class="col-md-1">
                                         <div class="form-group">
                                             <label>&nbsp;</label>
-                                            <button type="button" class="btn btn-secondary btn-block" id="cancelEditBtn" style="display: none;" title="Batal Edit">
+                                            <button type="button" class="btn btn-secondary btn-block" id="cancelEditBtn"
+                                                style="display: none;" title="Batal Edit">
                                                 <i class="la la-chain"></i>
                                             </button>
                                         </div>
@@ -430,9 +421,6 @@
                                             <label>Satuan</label>
                                             <select class="select2 form-control form-control-sm" id="satuan_select">
                                                 <option value="">-- Pilih --</option>
-                                                @foreach ($satuans as $item)
-                                                    <option value="{{ $item->id }}">{{ $item->nama }}</option>
-                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -536,7 +524,8 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Nama Jenis Stok <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nama" id="jenis_stok_nama" required placeholder="Contoh: Pembelian, Retur, Transfer">
+                            <input type="text" class="form-control" name="nama" id="jenis_stok_nama" required
+                                placeholder="Contoh: Pembelian, Retur, Transfer">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -553,7 +542,8 @@
     </div>
 
     <!-- Modal Tambah Jenis Stok -->
-    <div class="modal fade" id="modalJenisStok" tabindex="-1" role="dialog" aria-labelledby="modalJenisStokLabel" aria-hidden="true">
+    <div class="modal fade" id="modalJenisStok" tabindex="-1" role="dialog" aria-labelledby="modalJenisStokLabel"
+        aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -585,6 +575,13 @@
 @endsection
 
 @section('js')
+    {{-- select2 --}}
+    <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}" type="text/javascript"></script>
+
+    {{-- datepicker --}}
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
     <script>
         let detailItems = [];
         let itemCounter = 0;
@@ -607,6 +604,15 @@
             // Setup event listeners
             setupEventListeners();
 
+            // Initialize datepicker
+            $('input[name="tanggal"]').daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                locale: {
+                    format: 'YYYY-MM-DD'
+                }
+            });
+
             console.log('Form edit initialization complete');
         });
 
@@ -615,27 +621,27 @@
             console.log('Loading existing data...');
 
             // Load detail items from existing data
-            @if($barangKeluar->detailBarangKeluar->count() > 0)
+            @if ($barangKeluar->detailBarangKeluar->count() > 0)
                 console.log('Found {{ $barangKeluar->detailBarangKeluar->count() }} existing items');
 
-                @foreach($barangKeluar->detailBarangKeluar as $detail)
-                const item{{ $loop->index }} = {
-                    id: {{ $loop->iteration }},
-                    barang_id: {{ $detail->barang_id }},
-                    kode_barang: '{{ $detail->barang->kode ?? '' }}',
-                    nama_barang: '{{ $detail->barang->nama_barang ?? '' }}',
-                    ppn: {{ $detail->stok_ppn == 'PPN' ? '1' : '0' }},
-                    satuan: {{ $detail->satuan_id }},
-                    satuan_nama: '{{ $detail->satuan->nama ?? '' }}',
-                    isi: {{ $detail->isi }},
-                    harga_jual: {{ $detail->harga_jual }},
-                    jumlah: {{ $detail->jumlah }},
-                    total: {{ $detail->total }},
-                    keterangan: '{{ $detail->keterangan ?? '' }}'
-                };
+                @foreach ($barangKeluar->detailBarangKeluar as $detail)
+                    const item{{ $loop->index }} = {
+                        id: {{ $loop->iteration }},
+                        barang_id: {{ $detail->barang_id }},
+                        kode_barang: '{{ $detail->barang->kode ?? '' }}',
+                        nama_barang: '{{ $detail->barang->nama_barang ?? '' }}',
+                        ppn: {{ $detail->stok_ppn == 'PPN' ? '1' : '0' }},
+                        satuan: {{ $detail->satuan_id }},
+                        satuan_nama: '{{ $detail->satuan->nama ?? '' }}',
+                        isi: {{ $detail->isi }},
+                        harga_jual: {{ $detail->harga_jual }},
+                        jumlah: {{ $detail->jumlah }},
+                        total: {{ $detail->total }},
+                        keterangan: '{{ $detail->keterangan ?? '' }}'
+                    };
 
-                console.log('Adding item {{ $loop->index }}:', item{{ $loop->index }});
-                detailItems.push(item{{ $loop->index }});
+                    console.log('Adding item {{ $loop->index }}:', item{{ $loop->index }});
+                    detailItems.push(item{{ $loop->index }});
                 @endforeach
 
                 console.log('Total items loaded:', detailItems.length);
@@ -647,9 +653,9 @@
 
         // Setup all event listeners
         function setupEventListeners() {
+            initializeBarangSelect2();
             // Form interactions
             $('#barang_id').off('change').on('change', handleBarangChange);
-            $('#kode_barang').off('input').on('input', handleKodeBarangSearch);
             $('#addItemBtn').off('click').on('click', handleAddItem);
             $('#cancelEditBtn').off('click').on('click', handleCancelEdit);
 
@@ -669,35 +675,81 @@
             $('#barangKeluarEditForm').off('submit').on('submit', handleFormSubmit);
         }
 
+        function initializeBarangSelect2() {
+            $('#barang_id').select2({
+                placeholder: '-- Cari Nama / Kode Barang --',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body'),
+                ajax: {
+                    url: '{{ route('barangkeluar.getBarangs') }}',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function(data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    },
+                    cache: false
+                },
+                minimumInputLength: 1,
+                language: {
+                    noResults: function() {
+                        return 'Barang tidak ditemukan';
+                    },
+                    searching: function() {
+                        return 'Mencari...';
+                    },
+                    inputTooShort: function() {
+                        return 'Ketik minimal 1 karakter untuk mencari';
+                    }
+                }
+            });
+        }
+
         // Handle barang selection change
         function handleBarangChange() {
-            const selectedOption = $(this).find('option:selected');
-            if (selectedOption.val()) {
-                const kode = selectedOption.data('kode') || '';
-                const namaBarang = selectedOption.text();
-                $('#kode_barang').val(kode);
+            const selectedData = $('#barang_id').select2('data');
+            if (selectedData && selectedData.length > 0 && selectedData[0].id) {
+                const item = selectedData[0];
+                const kode = item.kode || '';
+                const namaBarang = item.nama_barang || '';
                 $('#nama_barang_display').val(kode + ' / ' + namaBarang + ' / Jenis');
+                populateSatuanOptions(item.satuans || []);
             } else {
-                $('#kode_barang').val('');
                 $('#nama_barang_display').val('');
+                $('#satuan_select').html('<option value="">-- Pilih --</option>');
             }
             calculateItemTotal();
         }
 
-        // Handle kode barang search
-        function handleKodeBarangSearch() {
-            const kode = $(this).val().toLowerCase();
-            const barangSelect = $('#barang_id');
+        function populateSatuanOptions(satuans, selectedSatuanId = null) {
+            const satuanSelect = $('#satuan_select');
+            satuanSelect.html('<option value="">-- Pilih --</option>');
 
-            // Search for matching kode
-            barangSelect.find('option').each(function() {
-                const optionKode = $(this).data('kode');
-                if (optionKode && optionKode.toLowerCase() === kode) {
-                    barangSelect.val($(this).val()).trigger('change');
-                    return false; // Break the loop
-                }
+            satuans.forEach(function(satuan) {
+                const isSelected = selectedSatuanId && String(selectedSatuanId) === String(satuan.id);
+                const option = new Option(satuan.nama, satuan.id, isSelected, isSelected);
+                satuanSelect.append(option);
             });
 
+            if (selectedSatuanId) {
+                satuanSelect.val(String(selectedSatuanId));
+            }
+        }
+
+        // Handle kode barang search
+        function handleKodeBarangSearch() {
             calculateItemTotal();
         }
 
@@ -760,7 +812,8 @@
                 if (existingIndex !== -1) {
                     // Update existing item
                     detailItems[existingIndex].jumlah += itemData.jumlah;
-                    detailItems[existingIndex].total = detailItems[existingIndex].harga_jual * detailItems[existingIndex].jumlah * detailItems[existingIndex].isi;
+                    detailItems[existingIndex].total = detailItems[existingIndex].harga_jual * detailItems[existingIndex]
+                        .jumlah * detailItems[existingIndex].isi;
                     showAlert('info', 'Item Diperbarui', 'Jumlah item yang sudah ada telah ditambahkan', 1500);
                 } else {
                     // Add new item
@@ -788,10 +841,12 @@
 
         // Get item form data
         function getItemFormData() {
+            const selectedData = $('#barang_id').select2('data');
+            const barangItem = selectedData && selectedData.length > 0 ? selectedData[0] : null;
             return {
                 barangId: $('#barang_id').val(),
-                kodeBarang: $('#kode_barang').val(),
-                namaBarang: $('#barang_id option:selected').text(),
+                kodeBarang: barangItem ? (barangItem.kode || '') : '',
+                namaBarang: barangItem ? (barangItem.nama_barang || '') : '',
                 ppn: $('#stok_ppn').val(),
                 satuan: $('#satuan_select').val(),
                 satuanNama: $('#satuan_select option:selected').text(),
@@ -864,9 +919,13 @@
 
         // Reset item form
         function resetItemForm() {
-            $('#barang_id, #kode_barang, #nama_barang_display, #harga_jual, #keterangan_detail').val('');
-            $('#satuan_select').val('');
-            $('#isi, #jumlah').val('1');
+            const barangSelect = $('#barang_id');
+            barangSelect.select2('close');
+            barangSelect.empty().append('<option value=""></option>');
+            barangSelect.val('').trigger('change');
+            $('#kode_barang, #nama_barang_display, #harga_jual, #keterangan_detail').val('');
+            $('#satuan_select').html('<option value="">-- Pilih --</option>');
+            $('#isi, #jumlah').val('');
             $('#total').val('');
             $('#stok_ppn').val('0');
             $('#barang_id').focus();
@@ -874,7 +933,8 @@
 
         // Reset edit mode
         function resetEditMode() {
-            $('#addItemBtn').html('<i class="feather icon-plus"></i> Tambah Item').removeClass('btn-warning').addClass('btn-success');
+            $('#addItemBtn').html('<i class="feather icon-plus"></i> Tambah Item').removeClass('btn-warning').addClass(
+                'btn-success');
             $('#addItemBtn').removeData('edit-id');
             $('#cancelEditBtn').hide();
             $('.search-section').removeClass('edit-mode');
@@ -1051,12 +1111,12 @@
                                         <div class="text-left">
                                             <p><strong>${response.message}</strong></p>
                                             ${response.data ? `
-                                                <hr>
-                                                <small class="text-muted">
-                                                    📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
-                                                    📦 Total Item: <strong>${response.data.total_items}</strong>
-                                                </small>
-                                            ` : ''}
+                                                                <hr>
+                                                                <small class="text-muted">
+                                                                    📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
+                                                                    📦 Total Item: <strong>${response.data.total_items}</strong>
+                                                                </small>
+                                                            ` : ''}
                                         </div>
                                     `,
                                     confirmButtonColor: SWAL_COLORS.success,
@@ -1082,7 +1142,8 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: '❌ Gagal Mengupdate',
-                                    text: response.message || 'Terjadi kesalahan tidak diketahui',
+                                    text: response.message ||
+                                        'Terjadi kesalahan tidak diketahui',
                                     confirmButtonColor: SWAL_COLORS.error,
                                     confirmButtonText: '🔄 Coba Lagi'
                                 });
@@ -1143,7 +1204,9 @@
                                 customClass: {
                                     popup: 'animated shake'
                                 },
-                                footer: xhr.status ? `<small class="text-muted">Error Code: ${xhr.status}</small>` : ''
+                                footer: xhr.status ?
+                                    `<small class="text-muted">Error Code: ${xhr.status}</small>` :
+                                    ''
                             });
                         }
                     });
@@ -1170,7 +1233,8 @@
 
         // Disable form during submission
         function toggleFormState(disabled = true) {
-            const formElements = $('#barangKeluarEditForm input, #barangKeluarEditForm select, #barangKeluarEditForm button, #addItemBtn');
+            const formElements = $(
+                '#barangKeluarEditForm input, #barangKeluarEditForm select, #barangKeluarEditForm button, #addItemBtn');
             formElements.prop('disabled', disabled);
 
             if (disabled) {
@@ -1264,12 +1328,21 @@
                 return;
             }
 
-            // Fill form with item data
-            $('#barang_id').val(item.barang_id).trigger('change');
-            $('#kode_barang').val(item.kode_barang);
+            // Set select2 value for barang
+            if ($('#barang_id').find('option[value="' + item.barang_id + '"]').length === 0) {
+                const newOption = new Option(item.nama_barang + ' - ' + item.kode_barang, item.barang_id, true, true);
+                $('#barang_id').append(newOption);
+            }
+            $('#barang_id').val(item.barang_id).trigger('change.select2');
+
+            populateSatuanOptions([{
+                id: item.satuan,
+                nama: item.satuan_nama || item.satuan
+            }], item.satuan);
+
+            // Manually trigger change handler to update display
             $('#nama_barang_display').val(item.kode_barang + ' / ' + item.nama_barang + ' / Jenis');
             $('#stok_ppn').val(item.ppn);
-            $('#satuan_select').val(item.satuan);
             $('#isi').val(item.isi);
             $('#harga_jual').val(formatRupiah(item.harga_jual));
             $('#jumlah').val(item.jumlah);
@@ -1277,7 +1350,8 @@
             $('#keterangan_detail').val(item.keterangan);
 
             // Set edit mode
-            $('#addItemBtn').html('<i class="feather icon-save"></i> Update Item').removeClass('btn-success').addClass('btn-warning');
+            $('#addItemBtn').html('<i class="feather icon-save"></i> Update Item').removeClass('btn-success').addClass(
+                'btn-warning');
             $('#addItemBtn').data('edit-id', itemId);
             $('#cancelEditBtn').show();
 
@@ -1390,104 +1464,6 @@
                     $('body').removeClass('modal-open');
                     $('.modal-backdrop').remove();
                 });
-            }
-        });
-    </script>
-
-    {{-- select2 --}}
-    <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('app-assets/js/scripts/forms/select/form-select2.min.js') }}" type="text/javascript"></script>
-
-    {{-- datepicker --}}
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-
-    <script>
-        // Handle jenis stok form submit
-        $('#formJenisStok').on('submit', function(e) {
-            e.preventDefault();
-
-            $.ajax({
-                url: '{{ route('jenisstok.store') }}',
-                method: 'POST',
-                data: $(this).serialize(),
-                beforeSend: function() {
-                    Swal.fire({
-                        title: 'Menyimpan...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                },
-                success: function(response) {
-                    // Close loading
-                    Swal.close();
-
-                    // Add new option to select
-                    const newOption = new Option(response.data.nama, response.data.id, true, true);
-                    $('#jenis_stok_id').append(newOption).trigger('change');
-
-                    // Reset form
-                    $('#formJenisStok')[0].reset();
-
-                    // Close modal manually
-                    $('#modalJenisStok').fadeOut(300, function() {
-                        $(this).removeClass('show');
-                        $('body').removeClass('modal-open');
-                        $('.modal-backdrop').remove();
-                    });
-
-                    // Show success message
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil!',
-                        text: 'Jenis stok berhasil ditambahkan',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                },
-                error: function(xhr) {
-                    Swal.close();
-
-                    let errorMessage = 'Terjadi kesalahan saat menyimpan data';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        html: errorMessage
-                    });
-                }
-            });
-        });
-
-        // Reset jenis stok form when modal is closed
-        $(document).on('click', '[data-dismiss="modal"]', function() {
-            if ($(this).closest('#modalJenisStok').length) {
-                $('#formJenisStok')[0].reset();
-                $('#modalJenisStok').fadeOut(300, function() {
-                    $(this).removeClass('show');
-                    $('body').removeClass('modal-open');
-                    $('.modal-backdrop').remove();
-                });
-            }
-        });
-
-        // Initialize Select2
-        $(document).ready(function() {
-            $('.select2').select2();
-        });
-
-        // Initialize DateRangePicker
-        $('input[name="tanggal"]').daterangepicker({
-            singleDatePicker: true,
-            showDropdowns: true,
-            locale: {
-                format: 'YYYY-MM-DD'
             }
         });
     </script>

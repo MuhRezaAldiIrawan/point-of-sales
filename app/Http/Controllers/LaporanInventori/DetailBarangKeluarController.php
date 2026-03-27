@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Models\DetailBarangKeluar;
-use App\Models\BarangKeluar;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -33,6 +32,7 @@ class DetailBarangKeluarController extends Controller
         $query = DetailBarangKeluar::with([
             'barangKeluar.jenisStok',
             'barangKeluar.createdBy',
+            'barangKeluar.cancelledBy',
             'barang',
             'satuan',
             'createdBy'
@@ -57,7 +57,7 @@ class DetailBarangKeluarController extends Controller
                 return $row->barangKeluar->no_reff ?? '-';
             })
             ->addColumn('jenis_stok', function ($row) {
-                return $row->barangKeluar->jenis_stok->nama ?? '-';
+                return $row->barangKeluar->jenisStok->nama ?? '-';
             })
             ->addColumn('nama_barang', function ($row) {
                 return $row->barang->nama_barang ?? '-';
@@ -68,15 +68,29 @@ class DetailBarangKeluarController extends Controller
             ->addColumn('total_formatted', function ($row) {
                 return 'Rp ' . number_format($row->total, 0, ',', '.');
             })
+            ->addColumn('status_badge', function ($row) {
+                if ($row->barangKeluar?->isCancelled()) {
+                    return '<span class="badge badge-danger">Cancelled</span>';
+                }
+
+                return '<span class="badge badge-success">Success</span>';
+            })
+            ->addColumn('cancel_reason_display', function ($row) {
+                if (! $row->barangKeluar?->isCancelled()) {
+                    return '-';
+                }
+
+                return $row->barangKeluar->cancel_reason ?: '-';
+            })
             ->addColumn('created_by_name', function ($row) {
-                return $row->createdBy->name ?? '-';
+                return $row->createdBy->name ?? $row->barangKeluar->createdBy->name ?? '-';
             })
             ->addColumn('action', function ($row) {
                 return '<button class="btn btn-sm btn-info" onclick="showDetail(' . $row->id . ')">
                             <i class="fa fa-eye"></i> Detail
                         </button>';
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['status_badge', 'action'])
             ->make(true);
     }
 
@@ -89,6 +103,7 @@ class DetailBarangKeluarController extends Controller
             $detailBarangKeluar = DetailBarangKeluar::with([
                 'barangKeluar.jenisStok',
                 'barangKeluar.createdBy',
+                'barangKeluar.cancelledBy',
                 'barang',
                 'satuan',
                 'createdBy'

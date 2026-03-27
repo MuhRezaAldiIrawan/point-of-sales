@@ -18,6 +18,49 @@ use Illuminate\Support\Str;
 
 class BarangKeluarController extends Controller
 {
+    public function getBarangs(Request $request)
+    {
+        $search = $request->get('q');
+        $page = $request->get('page', 1);
+        $perPage = 15;
+
+        $query = Barang::with(['detailBarang.satuan']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_barang', 'like', "%{$search}%")
+                  ->orWhere('kode', 'like', "%{$search}%");
+            });
+        }
+
+        $total = $query->count();
+        $barangs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        $results = $barangs->map(function ($barang) {
+            $satuans = $barang->detailBarang
+                ->filter(fn($detail) => !empty($detail->satuan))
+                ->unique('satuan_id')
+                ->map(fn($detail) => [
+                    'id' => $detail->satuan_id,
+                    'nama' => $detail->satuan->nama,
+                ])
+                ->values();
+
+            return [
+                'id' => $barang->id,
+                'text' => $barang->nama_barang . ' - ' . $barang->kode,
+                'kode' => $barang->kode,
+                'nama_barang' => $barang->nama_barang,
+                'satuans' => $satuans,
+            ];
+        });
+
+        return response()->json([
+            'results' => $results,
+            'pagination' => ['more' => ($page * $perPage) < $total],
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -27,7 +70,7 @@ class BarangKeluarController extends Controller
 
         if ($request->ajax()) {
 
-            $data = BarangKeluar::with(['jenisStok', 'detailBarangKeluar'])->orderBy('created_at', 'desc')->get();
+            $data = BarangKeluar::with(['jenisStok', 'detailBarangKeluar', 'cancelledBy'])->orderBy('created_at', 'desc')->get();
 
 
             return DataTables::of($data)
@@ -44,6 +87,15 @@ class BarangKeluarController extends Controller
                 ->addColumn('total', function ($row) {
                     return 'Rp ' . number_format($row->detailBarangKeluar->sum('total'), 0, ',', '.');
                 })
+                ->addColumn('status', function ($row) {
+                    if ($row->isCancelled()) {
+                        $reason = $row->cancel_reason ? '<br><small>' . e(Str::limit($row->cancel_reason, 40)) . '</small>' : '';
+
+                        return '<span class="badge badge-danger">Cancelled</span>' . $reason;
+                    }
+
+                    return '<span class="badge badge-success">Success</span>';
+                })
                 ->addColumn('catatan', function ($row) {
                     return $row->catatan ? Str::limit($row->catatan, 50) : '-';
                 })
@@ -54,18 +106,28 @@ class BarangKeluarController extends Controller
                                 <i class="ft-eye"></i>
                              </button>';
 
-                    $btn .= '<button class="btn btn-sm btn-warning btn-barangkeluar-edit" data-id="' . $row->id . '" title="Edit">
-                                <i class="ft-edit"></i>
-                             </button>';
+                          /*
+                          $btn .= '<button class="btn btn-sm btn-warning btn-barangkeluar-edit" data-id="' . $row->id . '" title="Edit">
+                                          <i class="ft-edit"></i>
+                                      </button>';
+                          */
 
-                    $btn .= '<button class="btn btn-sm btn-danger btn-barangkeluar-delete" data-id="' . $row->id . '" title="Hapus">
-                                <i class="ft-trash"></i>
-                             </button>';
+                          /*
+                          $btn .= '<button class="btn btn-sm btn-danger btn-barangkeluar-delete" data-id="' . $row->id . '" title="Hapus">
+                                          <i class="ft-trash"></i>
+                                      </button>';
+                          */
+
+                    if ($row->canBeCancelled()) {
+                        $btn .= '<button class="btn btn-sm btn-danger btn-barangkeluar-cancel" data-id="' . $row->id . '" data-no-reff="' . e($row->no_reff) . '" title="Cancel Transaksi">
+                                    <i class="ft-x-circle"></i>
+                                 </button>';
+                    }
 
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['status', 'action'])
                 ->make(true);
         }
 
@@ -80,10 +142,8 @@ class BarangKeluarController extends Controller
         $title = 'Tambah Barang Keluar';
 
         $jenisStoks = JenisStok::all();
-        $barangs = Barang::all();
-        $satuans = Satuan::all();
 
-        return view('pages.inventori.barangkeluar._partials.form', compact('title', 'jenisStoks', 'barangs', 'satuans'));
+        return view('pages.inventori.barangkeluar._partials.form', compact('title', 'jenisStoks'));
     }
 
     /**
@@ -122,6 +182,7 @@ class BarangKeluarController extends Controller
                 'no_reff' => $request->no_reff,
                 'tanggal_keluar' => $request->tanggal,
                 'jenis_stok_id' => $request->jenis_stok_id,
+                'status' => BarangKeluar::STATUS_SUCCESS,
                 'catatan' => $request->catatan,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
@@ -205,7 +266,8 @@ class BarangKeluarController extends Controller
                 'detailBarangKeluar.satuan',
                 'jenisStok',
                 'createdBy',
-                'updatedBy'
+                'updatedBy',
+                'cancelledBy'
             ])->findOrFail($id);
 
             if (request()->ajax()) {
@@ -216,7 +278,14 @@ class BarangKeluarController extends Controller
                         'no_reff' => $barangKeluar->no_reff,
                         'tanggal_keluar' => $barangKeluar->tanggal_keluar->format('d-m-Y'),
                         'jenis_stok' => $barangKeluar->jenisStok->nama ?? '-',
+                        'status' => $barangKeluar->status,
+                        'status_label' => $barangKeluar->isCancelled() ? 'Cancelled' : 'Success',
                         'catatan' => $barangKeluar->catatan ?? '-',
+                        'cancel_reason' => $barangKeluar->cancel_reason ?? '-',
+                        'cancelled_by' => $barangKeluar->cancelledBy->name ?? '-',
+                        'cancelled_at' => $barangKeluar->cancelled_at?->format('d-m-Y H:i:s') ?? '-',
+                        'can_edit' => $barangKeluar->canBeEdited(),
+                        'can_cancel' => $barangKeluar->canBeCancelled(),
                         'created_by' => $barangKeluar->createdBy->name ?? '-',
                         'updated_by' => $barangKeluar->updatedBy->name ?? '-',
                         'created_at' => $barangKeluar->created_at->format('d-m-Y H:i:s'),
@@ -271,6 +340,11 @@ class BarangKeluarController extends Controller
             $barangKeluar = BarangKeluar::with(['detailBarangKeluar.barang', 'detailBarangKeluar.satuan'])
                 ->findOrFail($id);
 
+            if ($barangKeluar->isCancelled()) {
+                return redirect()->route('barangkeluar.show', $barangKeluar->id)
+                    ->with('error', 'Data barang keluar yang sudah dicancel tidak dapat diedit');
+            }
+
             Log::info('Barang Keluar found', [
                 'id' => $barangKeluar->id,
                 'no_reff' => $barangKeluar->no_reff,
@@ -278,15 +352,10 @@ class BarangKeluarController extends Controller
             ]);
 
             $jenisStoks = JenisStok::all();
-            $barangs = Barang::all();
-            $satuans = Satuan::all();
-
             return view('pages.inventori.barangkeluar._partials.form-edit', compact(
                 'title',
                 'barangKeluar',
-                'jenisStoks',
-                'barangs',
-                'satuans'
+                'jenisStoks'
             ));
 
         } catch (\Exception $e) {
@@ -334,6 +403,10 @@ class BarangKeluarController extends Controller
             DB::beginTransaction();
 
             $barangKeluar = BarangKeluar::findOrFail($id);
+
+            if ($barangKeluar->isCancelled()) {
+                throw new \Exception('Data barang keluar yang sudah dicancel tidak dapat diperbarui');
+            }
 
             $barangKeluar->update([
                 'no_reff' => $request->no_reff,
@@ -409,6 +482,63 @@ class BarangKeluarController extends Controller
                 'success' => false,
                 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage(),
                 'error_type' => 'server_error'
+            ], 500);
+        }
+    }
+
+    public function cancel(Request $request, string $id)
+    {
+        try {
+            $validated = $request->validate([
+                'cancel_reason' => 'required|string|max:1000',
+            ], [
+                'cancel_reason.required' => 'Alasan cancel wajib diisi',
+            ]);
+
+            DB::beginTransaction();
+
+            $barangKeluar = BarangKeluar::findOrFail($id);
+
+            if ($barangKeluar->isCancelled()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data barang keluar ini sudah dicancel sebelumnya'
+                ], 422);
+            }
+
+            $barangKeluar->update([
+                'status' => BarangKeluar::STATUS_CANCELLED,
+                'cancel_reason' => $validated['cancel_reason'],
+                'cancelled_at' => now(),
+                'cancelled_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Barang keluar berhasil dicancel dan tidak lagi dihitung sebagai stok keluar'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Data yang dimasukkan tidak valid',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error cancelling Barang Keluar: ' . $e->getMessage(), [
+                'id' => $id,
+                'user_id' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat cancel data: ' . $e->getMessage()
             ], 500);
         }
     }
