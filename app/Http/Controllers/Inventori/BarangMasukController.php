@@ -24,7 +24,7 @@ class BarangMasukController extends Controller
         $page = $request->get('page', 1);
         $perPage = 15;
 
-        $query = Barang::query();
+        $query = Barang::with(['detailBarang.satuan']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -36,12 +36,24 @@ class BarangMasukController extends Controller
         $total = $query->count();
         $barangs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
 
-        $results = $barangs->map(fn($barang) => [
-            'id' => $barang->id,
-            'text' => $barang->nama_barang . ' - ' . $barang->kode,
-            'kode' => $barang->kode,
-            'nama_barang' => $barang->nama_barang,
-        ]);
+        $results = $barangs->map(function ($barang) {
+            $satuans = $barang->detailBarang
+                ->filter(fn($detail) => !empty($detail->satuan))
+                ->unique('satuan_id')
+                ->map(fn($detail) => [
+                    'id' => $detail->satuan_id,
+                    'nama' => $detail->satuan->nama,
+                ])
+                ->values();
+
+            return [
+                'id' => $barang->id,
+                'text' => $barang->nama_barang . ' - ' . $barang->kode,
+                'kode' => $barang->kode,
+                'nama_barang' => $barang->nama_barang,
+                'satuans' => $satuans,
+            ];
+        });
 
         return response()->json([
             'results' => $results,

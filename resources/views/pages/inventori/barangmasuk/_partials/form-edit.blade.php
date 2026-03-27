@@ -376,9 +376,6 @@
                                             <label>Satuan</label>
                                             <select class="select2 form-control form-control-sm" id="satuan_select">
                                                 <option value="">-- Pilih --</option>
-                                                @foreach ($satuans as $item)
-                                                    <option value="{{ $item->id }}">{{ $item->nama }}</option>
-                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -648,10 +645,27 @@
                 const kode = item.kode || '';
                 const namaBarang = item.nama_barang || '';
                 $('#nama_barang_display').val(kode + ' / ' + namaBarang + ' / Jenis');
+                populateSatuanOptions(item.satuans || []);
             } else {
                 $('#nama_barang_display').val('');
+                $('#satuan_select').html('<option value="">-- Pilih --</option>');
             }
             calculateItemTotal();
+        }
+
+        function populateSatuanOptions(satuans, selectedSatuanId = null) {
+            const satuanSelect = $('#satuan_select');
+            satuanSelect.html('<option value="">-- Pilih --</option>');
+
+            satuans.forEach(function(satuan) {
+                const isSelected = selectedSatuanId && String(selectedSatuanId) === String(satuan.id);
+                const option = new Option(satuan.nama, satuan.id, isSelected, isSelected);
+                satuanSelect.append(option);
+            });
+
+            if (selectedSatuanId) {
+                satuanSelect.val(String(selectedSatuanId));
+            }
         }
 
         // Handle kode barang search
@@ -1013,12 +1027,12 @@
                                         <div class="text-left">
                                             <p><strong>${response.message}</strong></p>
                                             ${response.data ? `
-                                                        <hr>
-                                                        <small class="text-muted">
-                                                            📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
-                                                            📦 Total Item: <strong>${response.data.total_items}</strong>
-                                                        </small>
-                                                    ` : ''}
+                                                            <hr>
+                                                            <small class="text-muted">
+                                                                📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
+                                                                📦 Total Item: <strong>${response.data.total_items}</strong>
+                                                            </small>
+                                                        ` : ''}
                                         </div>
                                     `,
                                     confirmButtonColor: SWAL_COLORS.success,
@@ -1237,10 +1251,14 @@
             }
             $('#barang_id').val(item.barang_id).trigger('change.select2');
 
+            populateSatuanOptions([{
+                id: item.satuan,
+                nama: item.satuan_nama || item.satuan
+            }], item.satuan);
+
             // Manually trigger change handler to update display
             $('#nama_barang_display').val(item.kode_barang + ' / ' + item.nama_barang + ' / Jenis');
             $('#stok_ppn').val(item.ppn);
-            $('#satuan_select').val(item.satuan);
             $('#isi').val(item.isi);
             $('#harga_beli').val(formatRupiah(item.harga_beli));
             $('#jumlah').val(item.jumlah);

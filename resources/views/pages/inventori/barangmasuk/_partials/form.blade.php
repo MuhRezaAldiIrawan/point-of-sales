@@ -339,9 +339,6 @@
                                             <label>Satuan</label>
                                             <select class="select2 form-control form-control-sm" id="satuan_select">
                                                 <option value="">-- Pilih --</option>
-                                                @foreach ($satuans as $item)
-                                                    <option value="{{ $item->id }}">{{ $item->nama }}</option>
-                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -574,11 +571,27 @@
                 const kode = item.kode || '';
                 const namaBarang = item.nama_barang || '';
                 $('#nama_barang_display').val(kode + ' / ' + namaBarang + ' / Jenis');
+                populateSatuanOptions(item.satuans || []);
             } else {
                 $('#nama_barang_display').val('');
                 $('#satuan_select').html('<option value="">-- Pilih --</option>');
             }
             calculateItemTotal();
+        }
+
+        function populateSatuanOptions(satuans, selectedSatuanId = null) {
+            const satuanSelect = $('#satuan_select');
+            satuanSelect.html('<option value="">-- Pilih --</option>');
+
+            satuans.forEach(function(satuan) {
+                const isSelected = selectedSatuanId && String(selectedSatuanId) === String(satuan.id);
+                const option = new Option(satuan.nama, satuan.id, isSelected, isSelected);
+                satuanSelect.append(option);
+            });
+
+            if (selectedSatuanId) {
+                satuanSelect.val(String(selectedSatuanId));
+            }
         }
 
         // Calculate item total
@@ -649,6 +662,7 @@
                 kodeBarang: barangItem ? (barangItem.kode || '') : '',
                 namaBarang: barangItem ? (barangItem.nama_barang || '') : '',
                 satuan: $('#satuan_select').val(),
+                satuanNama: $('#satuan_select option:selected').text() || '',
                 isi: parseFloat($('#isi').val()) || 0,
                 hargaBeli: getNumericValue($('#harga_beli').val()) || 0,
                 jumlah: parseFloat($('#jumlah').val()) || 0,
@@ -667,6 +681,7 @@
                 kode_barang: data.kodeBarang,
                 nama_barang: data.namaBarang,
                 satuan: data.satuan,
+                satuan_nama: data.satuanNama,
                 isi: data.isi,
                 harga_beli: data.hargaBeli,
                 jumlah: data.jumlah,
@@ -761,7 +776,7 @@
                     <td>${item.kode_barang}</td>
                     <td>${item.nama_barang}</td>
                     <td>${ppnText}</td>
-                    <td>${item.satuan}</td>
+                    <td>${item.satuan_nama || '-'}</td>
                     <td class="text-center">${item.isi}</td>
                     <td class="text-center">${item.jumlah}</td>
                     <td class="text-right">${formatRupiah(item.harga_beli)}</td>
@@ -869,12 +884,12 @@
                                         <div class="text-left">
                                             <p><strong>${response.message}</strong></p>
                                             ${response.data ? `
-                                                        <hr>
-                                                        <small class="text-muted">
-                                                            📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
-                                                            📦 Total Item: <strong>${response.data.total_items}</strong>
-                                                        </small>
-                                                    ` : ''}
+                                                                <hr>
+                                                                <small class="text-muted">
+                                                                    📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
+                                                                    📦 Total Item: <strong>${response.data.total_items}</strong>
+                                                                </small>
+                                                            ` : ''}
                                         </div>
                                     `,
                                     confirmButtonColor: SWAL_COLORS.success,
