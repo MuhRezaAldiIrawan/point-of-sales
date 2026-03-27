@@ -231,8 +231,8 @@
                             </div>
                         @endif
 
-        <form id="barangMasukForm" method="POST" action="{{ route('barangmasuk.store') }}">
-            @csrf                            <!-- Header Information -->
+                        <form id="barangMasukForm" method="POST" action="{{ route('barangmasuk.store') }}">
+                            @csrf <!-- Header Information -->
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
@@ -269,7 +269,8 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <button type="button" class="btn btn-add" data-toggle="modal" data-target="#modalJenisStok" title="Tambah Jenis Stok">
+                                            <button type="button" class="btn btn-add" data-toggle="modal"
+                                                data-target="#modalJenisStok" title="Tambah Jenis Stok">
                                                 <i class="ft-plus"></i>
                                             </button>
                                         </div>
@@ -305,23 +306,10 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label>Kode</label>
-                                            <input type="text" class="form-control form-control-sm" id="kode_barang"
-                                                placeholder="">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Cari Nama / Kode Barang</label>
                                             <select class="form-control form-control-sm" id="barang_id">
-                                                <option value="">-- Pilih Barang --</option>
-                                                @foreach ($barangs as $barang)
-                                                    <option value="{{ $barang->id }}" data-kode="{{ $barang->kode }}">
-                                                        {{ $barang->nama_barang }}
-                                                    </option>
-                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -457,7 +445,8 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Nama Jenis Stok <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="nama" id="jenis_stok_nama" required placeholder="Contoh: Pembelian, Retur, Transfer">
+                            <input type="text" class="form-control" name="nama" id="jenis_stok_nama" required
+                                placeholder="Contoh: Pembelian, Retur, Transfer">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -475,6 +464,13 @@
 @endsection
 
 @section('js')
+    {{-- select2 --}}
+    <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}" type="text/javascript"></script>
+
+    {{-- datepicker --}}
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
     <script>
         let detailItems = [];
         let itemCounter = 0;
@@ -490,11 +486,19 @@
         $(document).ready(function() {
             generateAutoRefNumber();
             setupEventListeners();
+
+            $('input[name="tanggal"]').daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                locale: {
+                    format: 'YYYY-MM-DD'
+                }
+            });
         });
 
         function setupEventListeners() {
+            initializeBarangSelect2();
             $('#barang_id').off('change').on('change', handleBarangChange);
-            $('#kode_barang').off('input').on('input', handleKodeBarangSearch);
             $('#addItemBtn').off('click').on('click', handleAddItem);
 
             $('#harga_beli, #jumlah, #isi').off('input').on('input', calculateItemTotal);
@@ -503,10 +507,52 @@
             $('#harga_beli').on('blur', formatPriceOnBlur);
             $('#harga_beli').on('keypress', validateNumericInput);
 
-            $('#kode_barang, #barang_id, #isi, #harga_beli, #jumlah, #keterangan_detail').off('keypress').on('keypress',
+            $('#isi, #harga_beli, #jumlah, #keterangan_detail').off('keypress').on('keypress',
                 handleEnterKey);
 
             $('#barangMasukForm').off('submit').on('submit', handleFormSubmit);
+        }
+
+        function initializeBarangSelect2() {
+            $('#barang_id').select2({
+                placeholder: '-- Cari Nama / Kode Barang --',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('body'),
+                ajax: {
+                    url: '{{ route('barangmasuk.getBarangs') }}',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {
+                        return {
+                            q: params.term,
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function(data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    },
+                    cache: false
+                },
+                minimumInputLength: 1,
+                language: {
+                    noResults: function() {
+                        return 'Barang tidak ditemukan';
+                    },
+                    searching: function() {
+                        return 'Mencari...';
+                    },
+                    inputTooShort: function() {
+                        return 'Ketik minimal 1 karakter untuk mencari';
+                    }
+                }
+            });
         }
 
 
@@ -522,35 +568,16 @@
         }
 
         function handleBarangChange() {
-            const selectedOption = $(this).find('option:selected');
-            if (selectedOption.val()) {
-                const kode = selectedOption.data('kode') || '';
-                const namaBarang = selectedOption.text();
-                $('#kode_barang').val(kode);
+            const selectedData = $('#barang_id').select2('data');
+            if (selectedData && selectedData.length > 0 && selectedData[0].id) {
+                const item = selectedData[0];
+                const kode = item.kode || '';
+                const namaBarang = item.nama_barang || '';
                 $('#nama_barang_display').val(kode + ' / ' + namaBarang + ' / Jenis');
-
             } else {
-                $('#kode_barang').val('');
                 $('#nama_barang_display').val('');
                 $('#satuan_select').html('<option value="">-- Pilih --</option>');
             }
-            calculateItemTotal();
-        }
-
-
-        function handleKodeBarangSearch() {
-            const kode = $(this).val().toLowerCase();
-            const barangSelect = $('#barang_id');
-
-            barangSelect.find('option').each(function() {
-                const optionKode = $(this).data('kode');
-                if (optionKode && optionKode.toLowerCase() === kode) {
-                    barangSelect.val($(this).val());
-                    $('#satuan').val('PCS');
-                    return false;
-                }
-            });
-
             calculateItemTotal();
         }
 
@@ -615,10 +642,12 @@
 
         // Get item form data
         function getItemFormData() {
+            const selectedData = $('#barang_id').select2('data');
+            const barangItem = selectedData && selectedData.length > 0 ? selectedData[0] : null;
             return {
                 barangId: $('#barang_id').val(),
-                kodeBarang: $('#kode_barang').val().trim(),
-                namaBarang: $('#barang_id option:selected').text(),
+                kodeBarang: barangItem ? (barangItem.kode || '') : '',
+                namaBarang: barangItem ? (barangItem.nama_barang || '') : '',
                 satuan: $('#satuan_select').val(),
                 isi: parseFloat($('#isi').val()) || 0,
                 hargaBeli: getNumericValue($('#harga_beli').val()) || 0,
@@ -688,7 +717,8 @@
 
         // Reset item form
         function resetItemForm() {
-            $('#barang_id, #kode_barang, #nama_barang_display, #harga_beli, #keterangan_detail').val('');
+            $('#barang_id').val(null).trigger('change');
+            $('#nama_barang_display, #harga_beli, #keterangan_detail').val('');
             $('#satuan_select').html('<option value="">-- Pilih --</option>');
             $('#isi, #jumlah').val('0');
             $('#total').val('');
@@ -839,12 +869,12 @@
                                         <div class="text-left">
                                             <p><strong>${response.message}</strong></p>
                                             ${response.data ? `
-                                                <hr>
-                                                <small class="text-muted">
-                                                    📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
-                                                    📦 Total Item: <strong>${response.data.total_items}</strong>
-                                                </small>
-                                            ` : ''}
+                                                        <hr>
+                                                        <small class="text-muted">
+                                                            📋 No. Referensi: <strong>${response.data.no_reff}</strong><br>
+                                                            📦 Total Item: <strong>${response.data.total_items}</strong>
+                                                        </small>
+                                                    ` : ''}
                                         </div>
                                     `,
                                     confirmButtonColor: SWAL_COLORS.success,
@@ -873,7 +903,8 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: '❌ Gagal Menyimpan',
-                                    text: response.message || 'Terjadi kesalahan tidak diketahui',
+                                    text: response.message ||
+                                        'Terjadi kesalahan tidak diketahui',
                                     confirmButtonColor: SWAL_COLORS.error,
                                     confirmButtonText: '🔄 Coba Lagi'
                                 });
@@ -934,7 +965,9 @@
                                 customClass: {
                                     popup: 'animated shake'
                                 },
-                                footer: xhr.status ? `<small class="text-muted">Error Code: ${xhr.status}</small>` : ''
+                                footer: xhr.status ?
+                                    `<small class="text-muted">Error Code: ${xhr.status}</small>` :
+                                    ''
                             });
                         }
                     });
@@ -966,6 +999,7 @@
         // Reset entire form
         function resetForm() {
             $('#barangMasukForm')[0].reset();
+            $('#barang_id').val(null).trigger('change');
             detailItems = [];
             itemCounter = 0;
             renderDetailTable();
@@ -1184,25 +1218,6 @@
                     $('body').removeClass('modal-open');
                     $('.modal-backdrop').remove();
                 });
-            }
-        });
-    </script>
-
-    {{-- select2 --}}
-    <script src="{{ asset('app-assets/vendors/js/forms/select/select2.full.min.js') }}" type="text/javascript"></script>
-    <script src="{{ asset('app-assets/js/scripts/forms/select/form-select2.min.js') }}" type="text/javascript"></script>
-
-    {{-- datepicker --}}
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-
-    <script>
-        $('input[name="tanggal"]').daterangepicker({
-            singleDatePicker: true,
-            showDropdowns: true,
-            locale: {
-                format: 'YYYY-MM-DD'
             }
         });
     </script>

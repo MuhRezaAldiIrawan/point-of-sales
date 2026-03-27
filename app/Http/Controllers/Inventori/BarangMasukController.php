@@ -18,6 +18,37 @@ use Illuminate\Support\Str;
 
 class BarangMasukController extends Controller
 {
+    public function getBarangs(Request $request)
+    {
+        $search = $request->get('q');
+        $page = $request->get('page', 1);
+        $perPage = 15;
+
+        $query = Barang::query();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_barang', 'like', "%{$search}%")
+                  ->orWhere('kode', 'like', "%{$search}%");
+            });
+        }
+
+        $total = $query->count();
+        $barangs = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+        $results = $barangs->map(fn($barang) => [
+            'id' => $barang->id,
+            'text' => $barang->nama_barang . ' - ' . $barang->kode,
+            'kode' => $barang->kode,
+            'nama_barang' => $barang->nama_barang,
+        ]);
+
+        return response()->json([
+            'results' => $results,
+            'pagination' => ['more' => ($page * $perPage) < $total],
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -83,10 +114,9 @@ class BarangMasukController extends Controller
         $title = 'Tambah Barang Masuk';
 
         $jenisStoks = JenisStok::all();
-        $barangs = Barang::all();
         $satuans = Satuan::all();
 
-        return view('pages.inventori.barangmasuk._partials.form', compact('title', 'jenisStoks', 'barangs', 'satuans'));
+        return view('pages.inventori.barangmasuk._partials.form', compact('title', 'jenisStoks', 'satuans'));
     }
 
     /**
@@ -273,14 +303,12 @@ class BarangMasukController extends Controller
                 ->findOrFail($id);
 
             $jenisStoks = JenisStok::all();
-            $barangs = Barang::all();
             $satuans = Satuan::all();
 
             return view('pages.inventori.barangmasuk._partials.form-edit', compact(
                 'title',
                 'barangMasuk',
                 'jenisStoks',
-                'barangs',
                 'satuans'
             ));
 

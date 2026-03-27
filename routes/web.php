@@ -61,6 +61,7 @@ Route::controller(PenjualanController::class)->group(function () {
 Route::controller(BarangMasukController::class)->group(function () {
     Route::get('/barang-masuk', 'index')->name('barangmasuk.index');
     Route::get('/barang-masuk/create', 'create')->name('barangmasuk.create');
+    Route::get('/barang-masuk/get-barangs', 'getBarangs')->name('barangmasuk.getBarangs');
     Route::post('/barang-masuk', 'store')->name('barangmasuk.store');
     Route::get('/barang-masuk/{id}', 'show')->name('barangmasuk.show');
     Route::get('/barang-masuk/{id}/edit', 'edit')->name('barangmasuk.edit');
