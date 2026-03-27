@@ -56,7 +56,7 @@
 
                     <label>Keterangan</label>
                     <div class="form-group">
-                        <textarea placeholder="Keterangan" class="form-control" id="keterangan" name="keterangan" required></textarea>
+                        <textarea placeholder="Keterangan" class="form-control" id="keterangan" name="keterangan"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
