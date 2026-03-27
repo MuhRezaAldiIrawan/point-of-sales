@@ -148,6 +148,7 @@ class DaftarHargaController extends Controller
                 foreach ($validated['detail'] as $detail) {
                     if (($detail['is_active'] ?? false)) {
                         DetailDaftarHarga::where('barang_id', $detail['barang_id'])
+                            ->where('satuan_id', $detail['satuan_id'])
                             ->where('is_active', true)
                             ->update([
                                 'is_active' => false,
@@ -271,6 +272,7 @@ class DaftarHargaController extends Controller
                 foreach ($validated['detail'] as $detail) {
                     if (($detail['is_active'] ?? false)) {
                         DetailDaftarHarga::where('barang_id', $detail['barang_id'])
+                            ->where('satuan_id', $detail['satuan_id'])
                             ->where('is_active', true)
                             ->update([
                                 'is_active' => false,
