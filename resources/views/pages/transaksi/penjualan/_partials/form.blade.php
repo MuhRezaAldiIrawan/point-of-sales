@@ -270,6 +270,27 @@
             border-right: none;
         }
 
+        .satuan-highlight {
+            border: 2px solid #ffc107 !important;
+            background: #fff8db;
+            font-weight: 700;
+            color: #6b4f00;
+        }
+
+        .satuan-label-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            background: #ffeaa7;
+            color: #6b4f00;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
         .receipt-preview {
             background: white;
             padding: 20px;
@@ -716,7 +737,10 @@
                                     stok: item.stok,
                                     harga_jual: item.harga_jual,
                                     satuan: item.satuan,
-                                    nama_barang: item.nama_barang
+                                    satuan_id: item.satuan_id,
+                                    satuan_options: item.satuan_options || [],
+                                    nama_barang: item.nama_barang,
+                                    kode: item.kode
                                 };
                             }),
                             pagination: {
@@ -813,6 +837,15 @@
                     return;
                 }
 
+                if (!selectedBarang.satuan_options || selectedBarang.satuan_options.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Daftar Harga Belum Lengkap',
+                        text: 'Produk ini belum memiliki satuan dan harga aktif pada daftar harga.'
+                    });
+                    return;
+                }
+
                 addItemRow(selectedBarang);
                 $('#search_barang').val(null).trigger('change');
             });
@@ -820,13 +853,19 @@
             function addItemRow(barang) {
                 itemCounter++;
 
+                const satuanOptions = Array.isArray(barang.satuan_options) ? barang.satuan_options : [];
+                const defaultSatuan = satuanOptions.length > 0 ? satuanOptions[0] : null;
+
                 const itemData = {
                     counter: itemCounter,
                     barang_id: barang.id,
                     nama_barang: barang.nama_barang,
+                    kode: barang.kode || '',
                     stok: barang.stok,
-                    harga_satuan: barang.harga_jual,
-                    satuan: barang.satuan,
+                    harga_satuan: defaultSatuan ? defaultSatuan.harga_jual : barang.harga_jual,
+                    satuan: defaultSatuan ? defaultSatuan.nama : (barang.satuan || '-'),
+                    satuan_id: defaultSatuan ? defaultSatuan.id : (barang.satuan_id || null),
+                    satuan_options: satuanOptions,
                     jumlah: 1,
                     bonus: 0,
                     diskon: 0
@@ -844,6 +883,7 @@
                                 <th style="width: 5%">No</th>
                                 <th style="width: 25%">Nama Barang</th>
                                 <th style="width: 10%">Stok</th>
+                                <th style="width: 13%">Satuan</th>
                                 <th style="width: 10%">Jumlah</th>
                                 <th style="width: 12%">Harga</th>
                                 <th style="width: 8%">Bonus</th>
@@ -870,12 +910,17 @@
                     <span class="badge-info-custom">${barang.stok}</span>
                 </td>
                 <td>
+                    <select class="form-control item-satuan satuan-highlight" data-counter="${itemCounter}">
+                        ${createSatuanOptionsHtml(itemData.satuan_options, itemData.satuan_id)}
+                    </select>
+                </td>
+                <td>
                     <input type="number" class="form-control item-jumlah" data-counter="${itemCounter}"
                            value="1" min="1" max="${barang.stok}" required ${barang.stok === 0 ? 'readonly' : ''}>
                 </td>
                 <td>
                     <input type="text" class="form-control item-harga" data-counter="${itemCounter}"
-                           value="${formatNumber(barang.harga_jual)}" required>
+                           value="${formatNumber(itemData.harga_satuan)}" required>
                 </td>
                 <td>
                     <input type="number" class="form-control item-bonus" data-counter="${itemCounter}"
@@ -900,6 +945,17 @@
                 $('#items-tbody').append(rowHtml);
                 calculateTotal();
                 bindItemEvents();
+            }
+
+            function createSatuanOptionsHtml(options, selectedId) {
+                if (!Array.isArray(options) || options.length === 0) {
+                    return '<option value="">-</option>';
+                }
+
+                return options.map(function(option) {
+                    const selected = String(option.id) === String(selectedId) ? 'selected' : '';
+                    return `<option value="${option.id}" data-harga="${option.harga_jual}" ${selected}>${option.nama}</option>`;
+                }).join('');
             }
 
             function bindItemEvents() {
@@ -936,6 +992,11 @@
                     updateItemSubtotal(counter);
                 });
 
+                $('.item-satuan').off('change').on('change', function() {
+                    const counter = $(this).data('counter');
+                    updateItemPriceBySatuan(counter);
+                });
+
                 $('.item-harga').off('input').on('input', function() {
                     const counter = $(this).data('counter');
                     formatItemHarga($(this));
@@ -945,6 +1006,23 @@
                 $('.item-harga').off('blur').on('blur', function() {
                     formatInputNumber($(this));
                 });
+            }
+
+            function updateItemPriceBySatuan(counter) {
+                const $row = $(`tr[data-counter="${counter}"]`);
+                const $selectedSatuan = $row.find('.item-satuan option:selected');
+                const hargaDariSatuan = parseFloat($selectedSatuan.data('harga')) || 0;
+
+                $row.find('.item-harga').val(formatNumber(hargaDariSatuan));
+
+                const itemIndex = items.findIndex(item => item.counter === counter);
+                if (itemIndex !== -1) {
+                    items[itemIndex].satuan_id = $selectedSatuan.val();
+                    items[itemIndex].satuan = $selectedSatuan.text();
+                    items[itemIndex].harga_satuan = hargaDariSatuan;
+                }
+
+                updateItemSubtotal(counter);
             }
 
             function updateItemSubtotal(counter) {
@@ -962,6 +1040,8 @@
                 if (itemIndex !== -1) {
                     items[itemIndex].jumlah = jumlah;
                     items[itemIndex].harga_satuan = harga;
+                    items[itemIndex].satuan_id = $row.find('.item-satuan').val();
+                    items[itemIndex].satuan = $row.find('.item-satuan option:selected').text();
                     items[itemIndex].bonus = parseFloat($row.find('.item-bonus').val()) || 0;
                     items[itemIndex].diskon = diskon;
                 }
@@ -1120,6 +1200,7 @@
                     const $row = $(`tr[data-counter="${item.counter}"]`);
                     return {
                         barang_id: item.barang_id,
+                        satuan_id: item.satuan_id,
                         jumlah: parseFloat($row.find('.item-jumlah').val()),
                         harga: unformatNumber($row.find('.item-harga').val()),
                         bonus: parseFloat($row.find('.item-bonus').val()) || 0,

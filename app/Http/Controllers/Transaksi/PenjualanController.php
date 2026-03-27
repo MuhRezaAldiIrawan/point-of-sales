@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Barang;
 use App\Models\BarangKeluar;
 use App\Models\BarangMasuk;
+use App\Models\DetailDaftarHarga;
 use App\Models\DetailBarangKeluar;
 use App\Models\DetailPenjualan;
 use App\Models\Pelanggan;
@@ -116,6 +117,7 @@ class PenjualanController extends Controller
             'jatuh_tempo' => 'nullable|date|required_if:payment_method,Credit',
             'items' => 'required|array|min:1',
             'items.*.barang_id' => 'required|exists:barangs,id',
+            'items.*.satuan_id' => 'required|exists:satuans,id',
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.harga' => 'required|numeric|min:0',
             'items.*.bonus' => 'nullable|integer|min:0',
@@ -227,7 +229,8 @@ class PenjualanController extends Controller
 
                 // Get barang detail for satuan_id and isi
                 $barang = Barang::with('detailBarang.satuan')->find($item['barang_id']);
-                $detailBarang = $barang->detailBarang->first();
+                $detailBarang = $barang->detailBarang
+                    ->firstWhere('satuan_id', $item['satuan_id']) ?? $barang->detailBarang->first();
 
                 if (!$detailBarang) {
                     throw new \Exception('Detail barang tidak ditemukan untuk ' . $barang->nama_barang);
@@ -250,7 +253,7 @@ class PenjualanController extends Controller
                 DetailBarangKeluar::create([
                     'barang_keluar_id' => $barangKeluar->id,
                     'barang_id' => $item['barang_id'],
-                    'satuan_id' => $detailBarang->satuan_id,
+                    'satuan_id' => $item['satuan_id'],
                     'isi' => $detailBarang->isi ?? 1,
                     'jumlah' => $jumlah + $bonus,
                     'harga_jual' => $harga,
@@ -623,12 +626,15 @@ class PenjualanController extends Controller
     public function getProduk(Request $request)
     {
         $search = $request->get('q');
+        $page = (int) $request->get('page', 1);
+        $perPage = 15;
         $barangs = Barang::with(['jenisBarang', 'merek', 'detailBarang.satuan'])
             ->where(function($query) use ($search) {
                 $query->where('nama_barang', 'like', '%' . $search . '%')
                       ->orWhere('kode', 'like', '%' . $search . '%');
             })
-            ->limit(10)
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
             ->get();
 
         $results = [];
@@ -669,17 +675,54 @@ class PenjualanController extends Controller
                 continue;
             }
 
+            $hargaSatuanOptions = DetailDaftarHarga::with('satuan')
+                ->where('barang_id', $barang->id)
+                ->where('is_active', true)
+                ->whereHas('daftarHarga', function ($query) {
+                    $query->where('is_active', true)
+                        ->where('status', 'pcs');
+                })
+                ->orderByDesc('updated_at')
+                ->get()
+                ->unique('satuan_id')
+                ->values()
+                ->map(function ($detail) {
+                    return [
+                        'id' => $detail->satuan_id,
+                        'nama' => optional($detail->satuan)->nama,
+                        'harga_jual' => (float) $detail->harga_jual,
+                    ];
+                })
+                ->filter(function ($item) {
+                    return !empty($item['id']) && !empty($item['nama']);
+                })
+                ->values();
+
+            if ($hargaSatuanOptions->isEmpty()) {
+                continue;
+            }
+
+            $defaultSatuan = $hargaSatuanOptions->first();
+
             $results[] = [
                 'id' => $barang->id,
-                'text' => $barang->nama_barang . ' (' . $barang->kode . ') - Stok: ' . $stok . ' ' . $detailBarang->satuan->nama_satuan,
+                'text' => $barang->nama_barang . ' (' . $barang->kode . ') - Stok: ' . $stok,
                 'nama_barang' => $barang->nama_barang,
+                'kode' => $barang->kode,
                 'stok' => $stok,
-                'harga_jual' => $detailBarang->harga_jual,
-                'satuan' => $detailBarang->satuan->nama_satuan
+                'harga_jual' => $defaultSatuan['harga_jual'],
+                'satuan' => $defaultSatuan['nama'],
+                'satuan_id' => $defaultSatuan['id'],
+                'satuan_options' => $hargaSatuanOptions,
             ];
         }
 
-        return response()->json(['results' => $results]);
+        return response()->json([
+            'results' => $results,
+            'pagination' => [
+                'more' => count($results) === $perPage,
+            ],
+        ]);
     }
 
     /**

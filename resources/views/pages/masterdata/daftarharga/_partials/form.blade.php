@@ -45,6 +45,12 @@
         #barang-item-template {
             display: none !important;
         }
+
+        .barang-item-footer {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px dashed #cfd8dc;
+        }
     </style>
 @endsection
 
@@ -285,18 +291,20 @@
                                 <input type="number" name="detail[${index}][diskon]" class="form-control" step="0.01" min="0" max="100" placeholder="0" value="0">
                             </div>
                         </div>
-                        <div class="col-md-1">
+                    </div>
+                    <div class="row barang-item-footer align-items-end">
+                        <div class="col-md-3 ml-auto">
                             <div class="form-group mb-0">
-                                <label class="font-weight-bold">Aktif</label>
+                                <label class="font-weight-bold">Status Aktif</label>
                                 <select name="detail[${index}][is_active]" class="form-control">
                                     <option value="1">Aktif</option>
                                     <option value="0">Nonaktif</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-1">
+                        <div class="col-md-2">
                             <div class="form-group mb-0">
-                                <button type="button" class="btn btn-danger btn-sm btn-block remove-barang-btn" style="margin-top:32px">
+                                <button type="button" class="btn btn-danger btn-sm btn-block remove-barang-btn">
                                     <i class="ft-trash-2"></i>
                                 </button>
                             </div>
