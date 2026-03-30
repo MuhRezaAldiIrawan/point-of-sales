@@ -98,4 +98,26 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Jabatan::class);
     }
+
+    public function hasRole(string|array $roles): bool
+    {
+        $jabatan = strtolower($this->jabatan->nama ?? '');
+        $roles = array_map('strtolower', (array) $roles);
+
+        if (in_array('administrator', $roles)) {
+            return $jabatan === 'administrator';
+        }
+
+        return in_array($jabatan, $roles);
+    }
+
+    public function isAdministrator(): bool
+    {
+        return strtolower($this->jabatan->nama ?? '') === 'administrator';
+    }
+
+    public function getRoleNameAttribute(): string
+    {
+        return $this->jabatan->nama ?? '-';
+    }
 }

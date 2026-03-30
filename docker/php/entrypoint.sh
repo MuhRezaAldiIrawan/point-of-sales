@@ -9,6 +9,6 @@ if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
 fi
 
 php artisan migrate --force
-php artisan db:seed --force
+php artisan db:seed --force --no-ansi
 
 exec php-fpm
