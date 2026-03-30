@@ -6,8 +6,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    <meta name="description" content="Login to {{ config('app.name', 'POS System') }} - Modern Point of Sale system for managing inventory, sales, and business operations.">
-    <meta name="keywords" content="POS login, point of sale, inventory management, sales system, business login, retail software">
+    <meta name="description"
+        content="Login to {{ config('app.name', 'POS System') }} - Modern Point of Sale system for managing inventory, sales, and business operations.">
+    <meta name="keywords"
+        content="POS login, point of sale, inventory management, sales system, business login, retail software">
     <meta name="author" content="{{ config('app.name', 'POS System') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login</title>
@@ -32,7 +34,8 @@
     <!-- END: Theme CSS-->
 
     <!-- BEGIN: Page CSS-->
-    <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/core/menu/menu-types/vertical-menu.min.css') }}">
+    <link rel="stylesheet" type="text/css"
+        href="{{ asset('app-assets/css/core/menu/menu-types/vertical-menu.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/core/colors/palette-gradient.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/pages/login-register.min.css') }}">
     <!-- END: Page CSS-->
@@ -61,10 +64,17 @@
                             <div class="card border-grey border-lighten-3 px-1 py-1 m-0">
                                 <div class="card-header border-0">
                                     <div class="text-center mb-1">
-                                        <img src="{{ asset('app-assets/images/logo/logo.png') }}" alt="{{ config('app.name', 'POS System') }} Logo">
+                                        @if ($globalSetting && $globalSetting->logo)
+                                            <img alt="Logo {{ $globalSetting->nama_perusahaan ?? 'POS System' }}"
+                                                src="{{ asset('storage/' . $globalSetting->logo) }}"
+                                                style="max-height: 80px;">
+                                        @else
+                                            <img alt="Default Logo"
+                                                src="{{ asset('app-assets/images/logo/logo.png') }}">
+                                        @endif
                                     </div>
                                     <div class="font-large-1  text-center">
-                                        Login
+                                        {{ $globalSetting->nama_perusahaan ?? 'POS System' }}
                                     </div>
                                 </div>
                                 <div class="card-content">
@@ -86,10 +96,12 @@
                                             </div>
                                         @endif
 
-                                        <form class="form-horizontal" action="{{ route('auth.login') }}" method="POST" novalidate>
+                                        <form class="form-horizontal" action="{{ route('auth.login') }}" method="POST"
+                                            novalidate>
                                             @csrf
                                             <fieldset class="form-group position-relative has-icon-left">
-                                                <input type="text" class="form-control round @error('nip') is-invalid @enderror"
+                                                <input type="text"
+                                                    class="form-control round @error('nip') is-invalid @enderror"
                                                     id="nip" name="nip" value="{{ old('nip') }}"
                                                     placeholder="Masukkan NIP" required>
                                                 <div class="form-control-position">
@@ -100,9 +112,10 @@
                                                 @enderror
                                             </fieldset>
                                             <fieldset class="form-group position-relative has-icon-left">
-                                                <input type="password" class="form-control round @error('password') is-invalid @enderror"
-                                                    id="password" name="password"
-                                                    placeholder="Masukkan Password" required>
+                                                <input type="password"
+                                                    class="form-control round @error('password') is-invalid @enderror"
+                                                    id="password" name="password" placeholder="Masukkan Password"
+                                                    required>
                                                 <div class="form-control-position">
                                                     <i class="ft-lock"></i>
                                                 </div>
@@ -136,7 +149,8 @@
     <!-- BEGIN Vendor JS-->
 
     <!-- BEGIN: Page Vendor JS-->
-    <script src="{{ asset('app-assets/vendors/js/forms/validation/jqBootstrapValidation.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('app-assets/vendors/js/forms/validation/jqBootstrapValidation.js') }}" type="text/javascript">
+    </script>
     <!-- END: Page Vendor JS-->
 
     <!-- BEGIN: Theme JS-->
