@@ -5,14 +5,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
-    <meta name="description" content="Modern Point of Sale (POS) system built with Laravel. Manage inventory, sales, customers, and reports with an intuitive dashboard interface.">
-    <meta name="keywords" content="POS system, point of sale, inventory management, sales management, retail software, Laravel POS, cashier system, business management">
+    <meta name="description"
+        content="Modern Point of Sale (POS) system built with Laravel. Manage inventory, sales, customers, and reports with an intuitive dashboard interface.">
+    <meta name="keywords"
+        content="POS system, point of sale, inventory management, sales management, retail software, Laravel POS, cashier system, business management">
     <meta name="author" content="POS System">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'POS System') }}</title>
     <link rel="apple-touch-icon" href="{{ asset('app-assets/images/ico/apple-icon-120.png') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('app-assets/images/ico/favicon.ico') }}">
-    <link href="https://fonts.googleapis.com/css?family=Muli:300,300i,400,400i,600,600i,700,700i%7CComfortaa:300,400,700" rel="stylesheet">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('app-assets/images/ico/favicon-32.png') }}">
+    <link
+        href="https://fonts.googleapis.com/css?family=Muli:300,300i,400,400i,600,600i,700,700i%7CComfortaa:300,400,700"
+        rel="stylesheet">
 
     <!-- BEGIN: Vendor CSS-->
     <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/vendors/css/vendors.min.css') }}">
@@ -75,7 +79,8 @@
 
 <!-- BEGIN: Body-->
 
-<body class="vertical-layout vertical-menu 2-columns   fixed-navbar" data-open="click" data-menu="vertical-menu" data-color="bg-gradient-x-purple-blue" data-col="2-columns">
+<body class="vertical-layout vertical-menu 2-columns   fixed-navbar" data-open="click" data-menu="vertical-menu"
+    data-color="bg-gradient-x-purple-blue" data-col="2-columns">
 
     <!-- BEGIN: Header-->
     @include('layouts.header')
@@ -90,22 +95,22 @@
     <div class="app-content content">
         <div class="content-wrapper">
             <div class="content-wrapper-before"></div>
-                <div class="content-body">
-                    <div class="content-header row">
-                        <div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
-                            <h3 class="content-header-title mb-0 d-inline-block">{{$title}}</h3>
-                            <div class="row breadcrumbs-top d-inline-block">
-                                <div class="breadcrumb-wrapper col-12">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Home</a></li>
-                                        <li class="breadcrumb-item active">{{$title}}</li>
-                                    </ol>
-                                </div>
+            <div class="content-body">
+                <div class="content-header row">
+                    <div class="content-header-left col-md-8 col-12 mb-2 breadcrumb-new">
+                        <h3 class="content-header-title mb-0 d-inline-block">{{ $title }}</h3>
+                        <div class="row breadcrumbs-top d-inline-block">
+                            <div class="breadcrumb-wrapper col-12">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{{ route('dashboard.index') }}">Home</a></li>
+                                    <li class="breadcrumb-item active">{{ $title }}</li>
+                                </ol>
                             </div>
                         </div>
                     </div>
-                    @yield('content')
                 </div>
+                @yield('content')
+            </div>
         </div>
     </div>
     <!-- END: Content-->
