@@ -13,7 +13,7 @@ class BankSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('banks')->insert([
+        $banks = [
             [
                 'nama' => 'BCA',
                 'no_rekening' => '1234567890',
@@ -46,6 +46,13 @@ class BankSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        foreach ($banks as $bank) {
+            DB::table('banks')->updateOrInsert(
+                ['nama' => $bank['nama']],
+                $bank
+            );
+        }
     }
 }

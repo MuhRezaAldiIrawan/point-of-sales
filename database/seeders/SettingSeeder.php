@@ -13,10 +13,9 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        // Hapus data setting lama jika ada
-        Setting::truncate();
-
-        Setting::create([
+        Setting::firstOrCreate(
+            ['nama_perusahaan' => 'POS System'],
+            [
             'nama_perusahaan' => 'POS System',
             'alamat' => 'Jl. Contoh No. 123, Jakarta',
             'telepon_1' => '021-12345678',
@@ -27,7 +26,8 @@ class SettingSeeder extends Seeder
             'stok_minimal' => 10,
             'ppn' => 11,
             'keterangan_struk' => 'Terima kasih atas kunjungan Anda. Barang yang sudah dibeli tidak dapat dikembalikan.',
-            'logo' => null, // Logo akan di-upload melalui interface admin
-        ]);
+            'logo' => null,
+        ]
+        );
     }
 }

@@ -13,7 +13,7 @@ class SatuanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('satuans')->insert([
+        $satuans = [
             [
                 'nama' => 'Pcs',
                 'kode' => 'PCS',
@@ -42,6 +42,13 @@ class SatuanSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        foreach ($satuans as $satuan) {
+            DB::table('satuans')->updateOrInsert(
+                ['kode' => $satuan['kode']],
+                $satuan
+            );
+        }
     }
 }

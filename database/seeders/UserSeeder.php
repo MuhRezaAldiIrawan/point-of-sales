@@ -9,17 +9,11 @@ use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Generate NIP dengan format TAHUN(YY)BULANTTANGGALJAMMENITDETIK
-        $baseTimestamp = now();
-
         $users = [
             [
-                'nip' => $baseTimestamp->copy()->addMinutes(1)->format('ymdHis'),
+                'nip' => '2301150001',
                 'ktp' => '3201234567890001',
                 'nama_depan' => 'Ahmad',
                 'nama_belakang' => 'Wijaya',
@@ -28,7 +22,7 @@ class UserSeeder extends Seeder
                 'tanggal_lahir' => '1990-05-15',
                 'email' => 'ahmad.wijaya@company.com',
                 'no_telepon' => '081234567890',
-                'jabatan_id' => 1, // Owner
+                'jabatan_id' => 1,
                 'tanggungan' => '2 anak',
                 'referensi' => 'Saudara',
                 'status_karyawan' => 'aktif',
@@ -41,10 +35,10 @@ class UserSeeder extends Seeder
                 'uang_makan' => 500000.00,
                 'tunjangan_lain' => 300000.00,
                 'created_by' => null,
-                'updated_by' => null
+                'updated_by' => null,
             ],
             [
-                'nip' => $baseTimestamp->copy()->addMinutes(2)->format('ymdHis'),
+                'nip' => '2303100002',
                 'ktp' => '3201234567890002',
                 'nama_depan' => 'Sari',
                 'nama_belakang' => 'Indah',
@@ -53,7 +47,7 @@ class UserSeeder extends Seeder
                 'tanggal_lahir' => '1992-08-22',
                 'email' => 'sari.indah@company.com',
                 'no_telepon' => '081298765432',
-                'jabatan_id' => 2, // Administrator
+                'jabatan_id' => 2,
                 'tanggungan' => '1 anak',
                 'referensi' => 'Teman',
                 'status_karyawan' => 'aktif',
@@ -66,10 +60,10 @@ class UserSeeder extends Seeder
                 'uang_makan' => 500000.00,
                 'tunjangan_lain' => 250000.00,
                 'created_by' => 1,
-                'updated_by' => 1
+                'updated_by' => 1,
             ],
             [
-                'nip' => $baseTimestamp->copy()->addMinutes(3)->format('ymdHis'),
+                'nip' => '2302200003',
                 'ktp' => '3201234567890003',
                 'nama_depan' => 'Budi',
                 'nama_belakang' => 'Santoso',
@@ -78,7 +72,7 @@ class UserSeeder extends Seeder
                 'tanggal_lahir' => '1988-12-03',
                 'email' => 'budi.santoso@company.com',
                 'no_telepon' => '081356789012',
-                'jabatan_id' => 3, // Kasir
+                'jabatan_id' => 3,
                 'tanggungan' => null,
                 'referensi' => 'Media Sosial',
                 'status_karyawan' => 'aktif',
@@ -91,10 +85,10 @@ class UserSeeder extends Seeder
                 'uang_makan' => 500000.00,
                 'tunjangan_lain' => 200000.00,
                 'created_by' => 1,
-                'updated_by' => 1
+                'updated_by' => 1,
             ],
             [
-                'nip' => $baseTimestamp->copy()->addMinutes(4)->format('ymdHis'),
+                'nip' => '2306010004',
                 'ktp' => '3201234567890004',
                 'nama_depan' => 'Dewi',
                 'nama_belakang' => 'Lestari',
@@ -103,7 +97,7 @@ class UserSeeder extends Seeder
                 'tanggal_lahir' => '1995-03-18',
                 'email' => 'dewi.lestari@company.com',
                 'no_telepon' => '081445678901',
-                'jabatan_id' => 4, // HR
+                'jabatan_id' => 4,
                 'tanggungan' => null,
                 'referensi' => 'Walk-in',
                 'status_karyawan' => 'aktif',
@@ -116,10 +110,10 @@ class UserSeeder extends Seeder
                 'uang_makan' => 500000.00,
                 'tunjangan_lain' => 150000.00,
                 'created_by' => 1,
-                'updated_by' => 1
+                'updated_by' => 1,
             ],
             [
-                'nip' => $baseTimestamp->copy()->addMinutes(5)->format('ymdHis'),
+                'nip' => '2211150005',
                 'ktp' => '3201234567890005',
                 'nama_depan' => 'Rizki',
                 'nama_belakang' => 'Pratama',
@@ -128,7 +122,7 @@ class UserSeeder extends Seeder
                 'tanggal_lahir' => '1993-07-10',
                 'email' => 'rizki.pratama@company.com',
                 'no_telepon' => '081567890123',
-                'jabatan_id' => 3, // Kasir
+                'jabatan_id' => 3,
                 'tanggungan' => '3 anak',
                 'referensi' => 'Keluarga',
                 'status_karyawan' => 'non-aktif',
@@ -141,12 +135,43 @@ class UserSeeder extends Seeder
                 'uang_makan' => 500000.00,
                 'tunjangan_lain' => 220000.00,
                 'created_by' => 1,
-                'updated_by' => 1
+                'updated_by' => 1,
+            ],
+            [
+                'nip' => '2401100006',
+                'ktp' => '3201234567890006',
+                'nama_depan' => 'Hendra',
+                'nama_belakang' => 'Kurniawan',
+                'jenis_kelamin' => 'L',
+                'alamat' => 'Jl. Pahlawan No. 88, Semarang',
+                'tanggal_lahir' => '1991-04-25',
+                'email' => 'hendra.kurniawan@company.com',
+                'no_telepon' => '081678901234',
+                'jabatan_id' => 5,
+                'tanggungan' => '1 anak',
+                'referensi' => 'Walk-in',
+                'status_karyawan' => 'aktif',
+                'status_login' => 'aktif',
+                'tanggal_masuk' => '2024-01-10',
+                'password' => Hash::make('password123'),
+                'foto' => null,
+                'gaji_pokok' => 5000000.00,
+                'tunjangan_jabatan' => 1000000.00,
+                'uang_makan' => 500000.00,
+                'tunjangan_lain' => 200000.00,
+                'created_by' => 1,
+                'updated_by' => 1,
             ],
         ];
 
-        foreach ($users as $user) {
-            User::create($user);
+        foreach ($users as $userData) {
+            $password = $userData['password'];
+            unset($userData['password']);
+
+            User::updateOrCreate(
+                ['email' => $userData['email']],
+                array_merge($userData, ['password' => $password])
+            );
         }
     }
 }

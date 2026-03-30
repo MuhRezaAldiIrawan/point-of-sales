@@ -13,7 +13,7 @@ class JenisBarangSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('jenis_barangs')->insert([
+        $items = [
             [
                 'nama' => 'Elektronik',
                 'kode' => 'ELEK',
@@ -42,6 +42,13 @@ class JenisBarangSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        foreach ($items as $item) {
+            DB::table('jenis_barangs')->updateOrInsert(
+                ['kode' => $item['kode']],
+                $item
+            );
+        }
     }
 }

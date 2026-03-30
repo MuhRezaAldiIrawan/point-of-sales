@@ -13,7 +13,7 @@ class JenisStokSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('jenis_stoks')->insert([
+        $items = [
             [
                 'nama' => 'STOK AWAL',
                 'created_by' => 1,
@@ -38,6 +38,13 @@ class JenisStokSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]
-        ]);
+        ];
+
+        foreach ($items as $item) {
+            DB::table('jenis_stoks')->updateOrInsert(
+                ['nama' => $item['nama']],
+                $item
+            );
+        }
     }
 }

@@ -13,7 +13,7 @@ class SupplierSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('suppliers')->insert([
+        $suppliers = [
             [
                 'nama' => 'PT. Sumber Makmur',
                 'alamat' => 'Jl. Industri No. 10, Jakarta',
@@ -40,6 +40,13 @@ class SupplierSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        foreach ($suppliers as $supplier) {
+            DB::table('suppliers')->updateOrInsert(
+                ['email' => $supplier['email']],
+                $supplier
+            );
+        }
     }
 }
